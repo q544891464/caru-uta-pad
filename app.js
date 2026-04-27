@@ -126,7 +126,7 @@ setupForm.addEventListener("submit", (event) => {
     roundScore: 0,
     combo: 0,
     frozenUntil: 0,
-    frozenForRound: false,
+    frozenUntilCardTouch: false,
     captures: [],
   }));
   state.round = 1;
@@ -205,7 +205,7 @@ function buildBoard() {
 function grabPlayer(index) {
   const player = state.players[index];
   if (!player?.active || state.activePlayer !== null) return;
-  if (player.frozenForRound || Date.now() < player.frozenUntil) return;
+  if (player.frozenUntilCardTouch || Date.now() < player.frozenUntil) return;
 
   state.activePlayer = index;
   state.selectedCardId = null;
@@ -220,6 +220,7 @@ function selectCard(cardId) {
   if (state.activePlayer === null) return;
   const card = state.cards.find((item) => item.id === cardId);
   if (!card || card.claimed) return;
+  releaseCardTouchFreezes(state.activePlayer);
   window.clearTimeout(state.answerDeadlineId);
   state.selectedCardId = cardId;
   render();
@@ -262,7 +263,7 @@ function applyWrong(playerIndex, reason) {
   player.roundScore -= 1;
   player.combo = 0;
   if (state.penaltyMode === "standard") {
-    player.frozenForRound = true;
+    player.frozenUntilCardTouch = true;
   } else {
     player.frozenUntil = Date.now() + 2000;
     window.setTimeout(render, 2050);
@@ -301,7 +302,7 @@ function finishRound() {
   state.players.forEach((player) => {
     player.roundScore = 0;
     player.combo = 0;
-    player.frozenForRound = false;
+    player.frozenUntilCardTouch = false;
     player.frozenUntil = 0;
     player.captures = [];
   });
@@ -361,7 +362,7 @@ function renderCorners() {
   $$(".corner-player").forEach((button) => {
     const index = Number(button.dataset.player);
     const player = state.players[index];
-    const frozen = player?.frozenForRound || Date.now() < player?.frozenUntil;
+    const frozen = player?.frozenUntilCardTouch || Date.now() < player?.frozenUntil;
     button.style.setProperty("--player-color", player?.color ?? "#999");
     button.classList.toggle("hidden", !player?.active);
     button.classList.toggle("frozen", Boolean(frozen));
@@ -512,6 +513,14 @@ function resetGame() {
   state.round = 1;
   state.timeLeft = state.roundLength;
   state.history = [];
+}
+
+function releaseCardTouchFreezes(touchingPlayerIndex) {
+  state.players.forEach((player, index) => {
+    if (index !== touchingPlayerIndex) {
+      player.frozenUntilCardTouch = false;
+    }
+  });
 }
 
 function makeCard(card, index) {
