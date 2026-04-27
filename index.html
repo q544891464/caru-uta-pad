@@ -29,6 +29,8 @@
             <select id="cardCount">
               <option value="12">12 张</option>
               <option value="16" selected>16 张</option>
+              <option value="24">24 张</option>
+              <option value="32">32 张</option>
             </select>
           </label>
           <label>
@@ -46,6 +48,23 @@
               <option value="standard">标准：-1 分，本轮冻结</option>
             </select>
           </label>
+          <details class="word-bank-editor">
+            <summary>
+              <span>编辑词库</span>
+              <small id="wordBankCount">内置 34 张</small>
+            </summary>
+            <textarea
+              id="wordBankInput"
+              spellcheck="false"
+              placeholder="每行一个词：词语,读音,分值&#10;例：君,きみ,1&#10;也支持粘贴 JSON 数组"
+            ></textarea>
+            <div class="word-bank-actions">
+              <button id="loadWordBank" type="button">导入保存</button>
+              <button id="exportWordBank" type="button">填入当前</button>
+              <button id="resetWordBank" type="button">恢复内置</button>
+            </div>
+            <p id="wordBankMessage" class="word-bank-message">支持 CSV/TSV 或 JSON，分值会限制在 1-3。</p>
+          </details>
           <button class="primary" type="submit">开始铺牌</button>
         </form>
       </section>

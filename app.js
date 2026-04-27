@@ -1,4 +1,6 @@
-const WORD_BANK = [
+const WORD_BANK_STORAGE_KEY = "caru-uta-pad-word-bank";
+
+const DEFAULT_WORD_BANK = [
   { word: "君", kana: "きみ", value: 1 },
   { word: "僕", kana: "ぼく", value: 1 },
   { word: "私", kana: "わたし", value: 1 },
@@ -34,6 +36,8 @@ const WORD_BANK = [
   { word: "願い", kana: "ねがい", value: 3 },
   { word: "幻", kana: "まぼろし", value: 3 },
 ];
+
+let wordBank = loadStoredWordBank() ?? cloneData(DEFAULT_WORD_BANK);
 
 const PLAYER_PRESETS = [
   { name: "红", color: "#e4564f" },
@@ -78,6 +82,11 @@ const undoAction = $("#undoAction");
 const resultModal = $("#resultModal");
 const winnerTitle = $("#winnerTitle");
 const resultList = $("#resultList");
+const wordBankInput = $("#wordBankInput");
+const wordBankCount = $("#wordBankCount");
+const wordBankMessage = $("#wordBankMessage");
+
+renderWordBankStatus();
 
 setupForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -131,6 +140,9 @@ $("#undoAction").addEventListener("click", undoLastAction);
 $("#endGame").addEventListener("click", showResults);
 $("#continueGame").addEventListener("click", () => resultModal.classList.add("hidden"));
 $("#resetGame").addEventListener("click", resetGame);
+$("#loadWordBank").addEventListener("click", importWordBank);
+$("#exportWordBank").addEventListener("click", fillWordBankEditor);
+$("#resetWordBank").addEventListener("click", resetWordBank);
 $("#markCorrect").addEventListener("click", markCorrect);
 $("#markWrong").addEventListener("click", markWrong);
 $("#cancelClaim").addEventListener("click", () => clearClaim());
@@ -140,12 +152,29 @@ $$(".corner-player").forEach((button) => {
 });
 
 function buildBoard() {
-  const ones = shuffle(WORD_BANK.filter((card) => card.value === 1)).slice(0, Math.ceil(state.cardCount * 0.45));
-  const twos = shuffle(WORD_BANK.filter((card) => card.value === 2)).slice(0, Math.ceil(state.cardCount * 0.35));
-  const threes = shuffle(WORD_BANK.filter((card) => card.value === 3)).slice(0, state.cardCount - ones.length - twos.length);
-  state.cards = shuffle([...ones, ...twos, ...threes]).slice(0, state.cardCount).map((card, index) => ({
-    ...makeCard(card, index),
-  }));
+  const targetCounts = {
+    1: Math.ceil(state.cardCount * 0.45),
+    2: Math.ceil(state.cardCount * 0.35),
+    3: state.cardCount,
+  };
+  targetCounts[3] = state.cardCount - targetCounts[1] - targetCounts[2];
+
+  const selected = [1, 2, 3].flatMap((value) =>
+    shuffle(wordBank.filter((card) => card.value === value)).slice(0, targetCounts[value]),
+  );
+  const selectedWords = new Set(selected.map((card) => card.word));
+  const fillers = shuffle(wordBank.filter((card) => !selectedWords.has(card.word))).slice(0, state.cardCount - selected.length);
+  const boardCards = [...selected, ...fillers];
+
+  while (boardCards.length < state.cardCount) {
+    boardCards.push(shuffle(wordBank)[0]);
+  }
+
+  state.cards = shuffle(boardCards)
+    .slice(0, state.cardCount)
+    .map((card, index) => ({
+      ...makeCard(card, index),
+    }));
 }
 
 function grabPlayer(index) {
@@ -283,6 +312,7 @@ function render() {
   renderTimer();
   roundNumber.textContent = state.round;
   undoAction.disabled = state.history.length === 0;
+  board.style.setProperty("--board-columns", getBoardColumns());
 }
 
 function renderScorebar() {
@@ -470,8 +500,98 @@ function makeCard(card, index) {
 function drawReplacementCard(index, removedWord) {
   const currentWords = new Set(state.cards.map((card) => card.word));
   currentWords.delete(removedWord);
-  const pool = WORD_BANK.filter((card) => !currentWords.has(card.word));
-  return makeCard(shuffle(pool.length ? pool : WORD_BANK)[0], index);
+  const pool = wordBank.filter((card) => !currentWords.has(card.word));
+  return makeCard(shuffle(pool.length ? pool : wordBank)[0], index);
+}
+
+function getBoardColumns() {
+  if (state.cardCount >= 32) return 8;
+  if (state.cardCount >= 24) return 6;
+  return 4;
+}
+
+function loadStoredWordBank() {
+  try {
+    const raw = localStorage.getItem(WORD_BANK_STORAGE_KEY);
+    return raw ? normalizeWordBank(JSON.parse(raw)) : null;
+  } catch {
+    return null;
+  }
+}
+
+function importWordBank() {
+  try {
+    const parsed = parseWordBankText(wordBankInput.value);
+    wordBank = parsed;
+    localStorage.setItem(WORD_BANK_STORAGE_KEY, JSON.stringify(wordBank));
+    renderWordBankStatus(`已保存 ${wordBank.length} 张词卡`, "ok");
+  } catch (error) {
+    renderWordBankStatus(error.message, "error");
+  }
+}
+
+function fillWordBankEditor() {
+  wordBankInput.value = wordBank.map((card) => `${card.word},${card.kana},${card.value}`).join("\n");
+  renderWordBankStatus("已填入当前词库，可编辑后导入保存", "ok");
+}
+
+function resetWordBank() {
+  wordBank = cloneData(DEFAULT_WORD_BANK);
+  localStorage.removeItem(WORD_BANK_STORAGE_KEY);
+  fillWordBankEditor();
+  renderWordBankStatus(`已恢复内置 ${wordBank.length} 张词卡`, "ok");
+}
+
+function renderWordBankStatus(message, type = "") {
+  wordBankCount.textContent = `${wordBank.length} 张`;
+  wordBankMessage.textContent = message ?? "支持 CSV/TSV 或 JSON，分值会限制在 1-3。";
+  wordBankMessage.className = `word-bank-message ${type}`.trim();
+}
+
+function parseWordBankText(text) {
+  const source = text.trim();
+  if (!source) {
+    throw new Error("词库不能为空");
+  }
+  if (source.startsWith("[")) {
+    return normalizeWordBank(JSON.parse(source));
+  }
+  const rows = source
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => line.split(/\t|,/).map((cell) => cell.trim()));
+  return normalizeWordBank(
+    rows.map(([word, kana = "", value = "1"]) => ({
+      word,
+      kana,
+      value: Number(value),
+    })),
+  );
+}
+
+function normalizeWordBank(cards) {
+  if (!Array.isArray(cards)) {
+    throw new Error("JSON 必须是数组");
+  }
+  const normalized = cards
+    .map((card) => ({
+      word: String(card.word ?? "").trim(),
+      kana: String(card.kana ?? "").trim(),
+      value: Math.min(3, Math.max(1, Number(card.value) || 1)),
+    }))
+    .filter((card) => card.word);
+  const unique = [];
+  const seen = new Set();
+  normalized.forEach((card) => {
+    if (seen.has(card.word)) return;
+    seen.add(card.word);
+    unique.push(card);
+  });
+  if (unique.length < 12) {
+    throw new Error("至少需要 12 张有效词卡");
+  }
+  return unique;
 }
 
 function cardColor(value) {
