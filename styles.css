@@ -244,7 +244,7 @@ audio {
 
 .round-actions {
   display: grid;
-  grid-template-columns: repeat(2, 96px);
+  grid-template-columns: repeat(3, 86px);
   gap: 8px;
 }
 
@@ -252,6 +252,11 @@ audio {
   min-height: 38px;
   background: #f3eee4;
   color: #252a33;
+}
+
+.round-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
 }
 
 .claim-panel {
@@ -504,6 +509,80 @@ audio {
 .chip.flipped {
   background: #252a33;
   color: white;
+}
+
+.result-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: max(28px, env(safe-area-inset-top)) max(28px, env(safe-area-inset-right))
+    max(28px, env(safe-area-inset-bottom)) max(28px, env(safe-area-inset-left));
+  background: rgba(21, 24, 30, 0.68);
+  backdrop-filter: blur(10px);
+}
+
+.result-sheet {
+  width: min(620px, 92vw);
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.96);
+  box-shadow: var(--shadow);
+}
+
+.result-sheet h2 {
+  margin: 0 0 18px;
+  font-size: clamp(36px, 6vw, 62px);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.result-list {
+  display: grid;
+  gap: 10px;
+}
+
+.result-row {
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f1eadf;
+  font-weight: 900;
+}
+
+.result-rank {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--player-color);
+  color: white;
+}
+
+.result-score {
+  font-size: 28px;
+}
+
+.result-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.result-actions button {
+  min-height: 54px;
+  border-radius: 8px;
+  background: #252a33;
+  color: white;
+  font-weight: 900;
 }
 
 @media (max-width: 800px), (orientation: portrait) {

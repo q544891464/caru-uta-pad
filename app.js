@@ -55,6 +55,7 @@ const state = {
   activePlayer: null,
   selectedCardId: null,
   answerDeadlineId: null,
+  history: [],
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -73,6 +74,10 @@ const timer = $("#timer");
 const roundNumber = $("#roundNumber");
 const audioInput = $("#audioInput");
 const audioPlayer = $("#audioPlayer");
+const undoAction = $("#undoAction");
+const resultModal = $("#resultModal");
+const winnerTitle = $("#winnerTitle");
+const resultList = $("#resultList");
 
 setupForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -92,6 +97,7 @@ setupForm.addEventListener("submit", (event) => {
   }));
   state.round = 1;
   state.timeLeft = state.roundLength;
+  state.history = [];
   setupPanel.classList.add("hidden");
   gamePanel.classList.remove("hidden");
   buildBoard();
@@ -121,12 +127,16 @@ $("#newBoard").addEventListener("click", () => {
 });
 
 $("#finishRound").addEventListener("click", finishRound);
+$("#undoAction").addEventListener("click", undoLastAction);
+$("#endGame").addEventListener("click", showResults);
+$("#continueGame").addEventListener("click", () => resultModal.classList.add("hidden"));
+$("#resetGame").addEventListener("click", resetGame);
 $("#markCorrect").addEventListener("click", markCorrect);
 $("#markWrong").addEventListener("click", markWrong);
 $("#cancelClaim").addEventListener("click", () => clearClaim());
 
 $$(".corner-player").forEach((button) => {
-  button.addEventListener("click", () => grabPlayer(Number(button.dataset.player)));
+  button.addEventListener("pointerdown", () => grabPlayer(Number(button.dataset.player)));
 });
 
 function buildBoard() {
@@ -168,6 +178,7 @@ function markCorrect() {
   const card = state.cards[cardIndex];
   if (!player || !card) return;
 
+  rememberState();
   const base = card.value;
   player.combo += 1;
   const comboBonus = player.combo > 0 && player.combo % 3 === 0 ? 2 : 0;
@@ -192,6 +203,7 @@ function markWrong() {
 function applyWrong(playerIndex, reason) {
   const player = state.players[playerIndex];
   if (!player) return;
+  rememberState();
   player.score -= 1;
   player.roundScore -= 1;
   player.combo = 0;
@@ -209,6 +221,7 @@ function repeatCapture(playerIndex, captureIndex) {
   const player = state.players[playerIndex];
   const capture = player?.captures[captureIndex];
   if (!capture || capture.repeated) return;
+  rememberState();
   capture.repeated = true;
   player.score += 1;
   player.roundScore += 1;
@@ -228,6 +241,7 @@ function clearClaim(message = "听到词后，先按自己的颜色角") {
 function finishRound() {
   stopTimer();
   audioPlayer.pause();
+  state.history = [];
   state.round += 1;
   state.timeLeft = state.roundLength;
   state.players.forEach((player) => {
@@ -268,6 +282,7 @@ function render() {
   renderClaim();
   renderTimer();
   roundNumber.textContent = state.round;
+  undoAction.disabled = state.history.length === 0;
 }
 
 function renderScorebar() {
@@ -321,7 +336,7 @@ function renderBoard() {
     })
     .join("");
   $$(".word-card").forEach((button) => {
-    button.addEventListener("click", () => selectCard(button.dataset.card));
+    button.addEventListener("pointerdown", () => selectCard(button.dataset.card));
   });
 }
 
@@ -348,7 +363,7 @@ function renderCaptures() {
     )
     .join("");
   $$(".chip").forEach((button) => {
-    button.addEventListener("click", () => repeatCapture(Number(button.dataset.player), Number(button.dataset.capture)));
+    button.addEventListener("pointerdown", () => repeatCapture(Number(button.dataset.player), Number(button.dataset.capture)));
   });
 }
 
@@ -382,6 +397,66 @@ function shuffle(items) {
     [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
   }
   return copy;
+}
+
+function rememberState() {
+  state.history.push({
+    players: cloneData(state.players),
+    cards: cloneData(state.cards),
+  });
+  if (state.history.length > 12) {
+    state.history.shift();
+  }
+}
+
+function cloneData(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function undoLastAction() {
+  const snapshot = state.history.pop();
+  if (!snapshot) return;
+  state.players = snapshot.players;
+  state.cards = snapshot.cards;
+  clearClaim("已撤销上一次判定");
+  render();
+}
+
+function showResults() {
+  stopTimer();
+  audioPlayer.pause();
+  const ranking = state.players
+    .filter((player) => player.active)
+    .map((player) => ({ ...player }))
+    .sort((a, b) => b.score - a.score);
+  const [winner] = ranking;
+  winnerTitle.textContent = winner ? `${winner.name}队获胜` : "本局结束";
+  resultList.innerHTML = ranking
+    .map(
+      (player, index) => `
+        <div class="result-row" style="--player-color:${player.color}">
+          <span class="result-rank">${index + 1}</span>
+          <span>${player.name}队</span>
+          <strong class="result-score">${player.score}</strong>
+        </div>
+      `,
+    )
+    .join("");
+  resultModal.classList.remove("hidden");
+}
+
+function resetGame() {
+  stopTimer();
+  audioPlayer.pause();
+  resultModal.classList.add("hidden");
+  gamePanel.classList.add("hidden");
+  setupPanel.classList.remove("hidden");
+  clearClaim();
+  state.players = [];
+  state.cards = [];
+  state.round = 1;
+  state.timeLeft = state.roundLength;
+  state.history = [];
 }
 
 function makeCard(card, index) {

@@ -74,6 +74,8 @@
                 <button id="pauseRound" type="button">暂停</button>
                 <button id="newBoard" type="button">换牌</button>
                 <button id="finishRound" type="button">结算本首</button>
+                <button id="undoAction" type="button" disabled>撤销</button>
+                <button id="endGame" type="button">结束本局</button>
               </div>
             </div>
 
@@ -91,6 +93,18 @@
         </div>
 
         <section class="captures" id="captures"></section>
+      </section>
+
+      <section class="result-modal hidden" id="resultModal" aria-live="polite">
+        <div class="result-sheet">
+          <p class="micro">最终排名</p>
+          <h2 id="winnerTitle">本局结束</h2>
+          <div class="result-list" id="resultList"></div>
+          <div class="result-actions">
+            <button id="continueGame" type="button">继续玩</button>
+            <button id="resetGame" type="button">重新开局</button>
+          </div>
+        </div>
       </section>
     </main>
 
