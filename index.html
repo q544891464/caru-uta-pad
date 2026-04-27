@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>狩歌 Pad 抢词版</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="setup" id="setupPanel">
+        <div class="setup-copy">
+          <p class="eyebrow">CARU UTA PAD</p>
+          <h1>狩歌抢词桌</h1>
+          <p>一台 iPad 放在桌中央，四角抢身份，中间点词卡。适合 2-4 人线下边听歌边抢。</p>
+        </div>
+
+        <form class="setup-controls" id="setupForm">
+          <label>
+            玩家人数
+            <select id="playerCount">
+              <option value="2">2 人</option>
+              <option value="3">3 人</option>
+              <option value="4" selected>4 人</option>
+            </select>
+          </label>
+          <label>
+            桌面词卡
+            <select id="cardCount">
+              <option value="12">12 张</option>
+              <option value="16" selected>16 张</option>
+            </select>
+          </label>
+          <label>
+            单轮时长
+            <select id="roundLength">
+              <option value="45">45 秒</option>
+              <option value="60" selected>60 秒</option>
+              <option value="90">90 秒</option>
+            </select>
+          </label>
+          <label>
+            错误惩罚
+            <select id="penaltyMode">
+              <option value="light" selected>轻惩罚：-1 分，冻结 2 秒</option>
+              <option value="standard">标准：-1 分，本轮冻结</option>
+            </select>
+          </label>
+          <button class="primary" type="submit">开始铺牌</button>
+        </form>
+      </section>
+
+      <section class="game hidden" id="gamePanel">
+        <div class="scorebar" id="scorebar"></div>
+
+        <div class="table-shell">
+          <button class="corner-player top-left" data-player="0"></button>
+          <button class="corner-player top-right" data-player="1"></button>
+          <button class="corner-player bottom-left" data-player="2"></button>
+          <button class="corner-player bottom-right" data-player="3"></button>
+
+          <section class="table">
+            <div class="round-panel">
+              <div>
+                <p class="micro">第 <span id="roundNumber">1</span> 首歌</p>
+                <strong id="timer">01:00</strong>
+              </div>
+              <div class="audio-box">
+                <input id="audioInput" type="file" accept="audio/*" />
+                <audio id="audioPlayer" controls></audio>
+              </div>
+              <div class="round-actions">
+                <button id="startRound" type="button">开始</button>
+                <button id="pauseRound" type="button">暂停</button>
+                <button id="newBoard" type="button">换牌</button>
+                <button id="finishRound" type="button">结算本首</button>
+              </div>
+            </div>
+
+            <div class="claim-panel idle" id="claimPanel">
+              <span id="claimText">听到词后，先按自己的颜色角</span>
+              <div class="claim-actions hidden" id="claimActions">
+                <button class="good" id="markCorrect" type="button">正确</button>
+                <button class="bad" id="markWrong" type="button">错误</button>
+                <button id="cancelClaim" type="button">取消</button>
+              </div>
+            </div>
+
+            <div class="board" id="board"></div>
+          </section>
+        </div>
+
+        <section class="captures" id="captures"></section>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
