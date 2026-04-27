@@ -85,6 +85,9 @@ const state = {
   selectedCardId: null,
   answerDeadlineId: null,
   history: [],
+  boardAnimation: "deal",
+  boardAnimationTimer: null,
+  drawnCardId: null,
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -110,6 +113,7 @@ const resultList = $("#resultList");
 const wordBankInput = $("#wordBankInput");
 const wordBankCount = $("#wordBankCount");
 const wordBankMessage = $("#wordBankMessage");
+const effectLayer = $("#effectLayer");
 
 renderWordBankStatus();
 
@@ -127,11 +131,14 @@ setupForm.addEventListener("submit", (event) => {
     combo: 0,
     frozenUntil: 0,
     frozenUntilCardTouch: false,
+    comboBurst: false,
     captures: [],
   }));
   state.round = 1;
   state.timeLeft = state.roundLength;
   state.history = [];
+  state.boardAnimation = "deal";
+  state.drawnCardId = null;
   setupPanel.classList.add("hidden");
   gamePanel.classList.remove("hidden");
   buildBoard();
@@ -156,8 +163,7 @@ $("#pauseRound").addEventListener("click", () => {
 
 $("#newBoard").addEventListener("click", () => {
   clearClaim();
-  buildBoard();
-  render();
+  shuffleBoard();
 });
 
 $("#finishRound").addEventListener("click", finishRound);
@@ -209,6 +215,7 @@ function grabPlayer(index) {
 
   state.activePlayer = index;
   state.selectedCardId = null;
+  showGrabWave(index);
   window.clearTimeout(state.answerDeadlineId);
   state.answerDeadlineId = window.setTimeout(() => {
     applyWrong(index, "超时");
@@ -237,15 +244,23 @@ function markCorrect() {
   const base = card.value;
   player.combo += 1;
   const comboBonus = player.combo > 0 && player.combo % 3 === 0 ? 2 : 0;
+  const gained = base + comboBonus;
   player.score += base + comboBonus;
   player.roundScore += base + comboBonus;
   player.captures.unshift({
     ...card,
     repeated: false,
-    gained: base + comboBonus,
+    gained,
     bonusText: comboBonus ? ` +${comboBonus}连击` : "",
   });
-  state.cards[cardIndex] = drawReplacementCard(cardIndex, card.word);
+  showScoreFloat(cardIndex, gained, comboBonus);
+  if (comboBonus) {
+    triggerComboBurst(state.activePlayer);
+  }
+  const replacementCard = drawReplacementCard(cardIndex, card.word);
+  state.cards[cardIndex] = replacementCard;
+  state.drawnCardId = replacementCard.id;
+  state.boardAnimation = "draw";
   clearClaim();
   render();
 }
@@ -307,8 +322,7 @@ function finishRound() {
     player.captures = [];
   });
   clearClaim("已进入下一首，换歌后开始");
-  buildBoard();
-  render();
+  shuffleBoard("已进入下一首，换歌后开始");
 }
 
 function startTimer() {
@@ -351,7 +365,7 @@ function renderScorebar() {
             <div class="score-name">${player.name}队</div>
             <div class="score-meta">本首 ${formatSigned(player.roundScore)} / 连击 ${player.combo}</div>
           </div>
-          <strong class="score-value">${player.score}</strong>
+          <strong class="score-value ${player.comboBurst ? "combo-burst" : ""}">${player.score}</strong>
         </article>
       `,
     )
@@ -372,13 +386,15 @@ function renderCorners() {
 }
 
 function renderBoard() {
+  board.classList.toggle("is-shuffling", state.boardAnimation === "shuffle");
   board.innerHTML = state.cards
-    .map((card) => {
+    .map((card, index) => {
       const selected = state.selectedCardId === card.id;
+      const animationClass = getCardAnimationClass(card);
       return `
         <button
-          class="word-card ${card.claimed ? "claimed" : ""} ${selected ? "selected" : ""}"
-          style="--card-bg:${cardColor(card.value)}; --active-color:${activeColor()}"
+          class="word-card ${card.claimed ? "claimed" : ""} ${selected ? "selected" : ""} ${animationClass}"
+          style="--card-bg:${cardColor(card.value)}; --active-color:${activeColor()}; --deal-delay:${index * 24}ms"
           data-card="${card.id}"
           type="button"
         >
@@ -394,6 +410,13 @@ function renderBoard() {
   $$(".word-card").forEach((button) => {
     button.addEventListener("pointerdown", () => selectCard(button.dataset.card));
   });
+  window.clearTimeout(state.boardAnimationTimer);
+  if (state.boardAnimation === "deal" || state.boardAnimation === "draw") {
+    state.boardAnimationTimer = window.setTimeout(() => {
+      state.boardAnimation = null;
+      state.drawnCardId = null;
+    }, state.boardAnimation === "deal" ? 900 : 520);
+  }
 }
 
 function renderCaptures() {
@@ -453,6 +476,25 @@ function shuffle(items) {
     [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
   }
   return copy;
+}
+
+function shuffleBoard(message = "正在洗牌") {
+  state.boardAnimation = "shuffle";
+  state.drawnCardId = null;
+  clearClaim(message);
+  render();
+  window.clearTimeout(state.boardAnimationTimer);
+  state.boardAnimationTimer = window.setTimeout(() => {
+    state.boardAnimation = "deal";
+    buildBoard();
+    render();
+  }, 420);
+}
+
+function getCardAnimationClass(card) {
+  if (state.boardAnimation === "deal") return "deal-in";
+  if (state.boardAnimation === "draw" && card.id === state.drawnCardId) return "draw-in";
+  return "";
 }
 
 function rememberState() {
@@ -517,10 +559,71 @@ function resetGame() {
 
 function releaseCardTouchFreezes(touchingPlayerIndex) {
   state.players.forEach((player, index) => {
-    if (index !== touchingPlayerIndex) {
+    if (index !== touchingPlayerIndex && player.frozenUntilCardTouch) {
       player.frozenUntilCardTouch = false;
+      showUnfreezeEffect(index);
     }
   });
+}
+
+function showGrabWave(playerIndex) {
+  const corner = $(`.corner-player[data-player="${playerIndex}"]`);
+  const player = state.players[playerIndex];
+  if (!corner || !player) return;
+  const rect = corner.getBoundingClientRect();
+  const wave = document.createElement("span");
+  wave.className = "grab-wave";
+  wave.style.setProperty("--player-color", player.color);
+  wave.style.left = `${rect.left + rect.width / 2}px`;
+  wave.style.top = `${rect.top + rect.height / 2}px`;
+  effectLayer.append(wave);
+  removeAfter(wave, 760);
+}
+
+function showScoreFloat(cardIndex, gained, comboBonus) {
+  const cardButton = $$(".word-card")[cardIndex];
+  const player = state.players[state.activePlayer];
+  if (!cardButton || !player) return;
+  const rect = cardButton.getBoundingClientRect();
+  const score = document.createElement("span");
+  score.className = `score-float ${comboBonus ? "combo" : ""}`;
+  score.style.setProperty("--player-color", player.color);
+  score.style.left = `${rect.left + rect.width / 2}px`;
+  score.style.top = `${rect.top + rect.height / 2}px`;
+  score.textContent = comboBonus ? `+${gained} 连击!` : `+${gained}`;
+  effectLayer.append(score);
+  removeAfter(score, 900);
+}
+
+function triggerComboBurst(playerIndex) {
+  const player = state.players[playerIndex];
+  if (!player) return;
+  player.comboBurst = true;
+  window.setTimeout(() => {
+    const currentPlayer = state.players[playerIndex];
+    if (!currentPlayer) return;
+    currentPlayer.comboBurst = false;
+    renderScorebar();
+  }, 820);
+}
+
+function showUnfreezeEffect(playerIndex) {
+  const corner = $(`.corner-player[data-player="${playerIndex}"]`);
+  const player = state.players[playerIndex];
+  if (!corner || !player) return;
+  const rect = corner.getBoundingClientRect();
+  const toast = document.createElement("span");
+  toast.className = "unfreeze-toast";
+  toast.style.setProperty("--player-color", player.color);
+  toast.style.left = `${rect.left + rect.width / 2}px`;
+  toast.style.top = `${rect.top + rect.height / 2}px`;
+  toast.textContent = "解冻";
+  effectLayer.append(toast);
+  removeAfter(toast, 880);
+}
+
+function removeAfter(element, delay) {
+  window.setTimeout(() => element.remove(), delay);
 }
 
 function makeCard(card, index) {

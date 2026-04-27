@@ -260,6 +260,15 @@ select {
   font-weight: 950;
 }
 
+.score-value.combo-burst {
+  position: relative;
+  color: #d9482f;
+  animation: combo-pop 820ms ease-out both;
+  text-shadow:
+    0 0 0 #fff,
+    0 0 18px rgba(226, 173, 50, 0.9);
+}
+
 .table-shell {
   position: relative;
   min-height: 0;
@@ -419,6 +428,13 @@ audio {
   display: grid;
   grid-template-columns: repeat(var(--board-columns, 4), minmax(82px, 1fr));
   gap: 10px;
+  perspective: 1000px;
+}
+
+.board.is-shuffling .word-card {
+  pointer-events: none;
+  animation: shuffle-card 420ms ease-in-out both;
+  animation-delay: calc((var(--deal-delay) / 24) * 8ms);
 }
 
 .word-card {
@@ -454,6 +470,15 @@ audio {
   pointer-events: none;
   opacity: 0.18;
   transform: scale(0.96);
+}
+
+.word-card.deal-in {
+  animation: deal-card 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--deal-delay);
+}
+
+.word-card.draw-in {
+  animation: draw-card 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .word {
@@ -501,8 +526,25 @@ audio {
 }
 
 .corner-player.frozen {
-  filter: grayscale(0.9);
-  opacity: 0.45;
+  overflow: hidden;
+  filter: grayscale(0.72) saturate(0.85);
+  opacity: 0.62;
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.34) 0 8px, rgba(178, 221, 238, 0.34) 8px 16px),
+    var(--player-color);
+  animation: frozen-pulse 1400ms ease-in-out infinite;
+}
+
+.corner-player.frozen::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border: 3px solid rgba(219, 247, 255, 0.7);
+  background:
+    linear-gradient(45deg, transparent 48%, rgba(255, 255, 255, 0.72) 50%, transparent 52%),
+    linear-gradient(-45deg, transparent 46%, rgba(255, 255, 255, 0.46) 50%, transparent 54%);
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 .corner-player.active {
@@ -658,6 +700,188 @@ audio {
   background: #252a33;
   color: white;
   font-weight: 900;
+}
+
+.effect-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.grab-wave {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border: 5px solid var(--player-color);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow:
+    0 0 0 10px rgba(255, 255, 255, 0.22),
+    0 0 42px var(--player-color);
+  animation: grab-wave 760ms ease-out both;
+}
+
+.score-float,
+.unfreeze-toast {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 8px;
+  color: white;
+  background: var(--player-color);
+  font-weight: 950;
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.24);
+  white-space: nowrap;
+}
+
+.score-float {
+  padding: 8px 14px;
+  font-size: clamp(26px, 4vw, 46px);
+  animation: score-float 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.score-float.combo {
+  background: #d9482f;
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.24),
+    0 0 28px rgba(226, 173, 50, 0.9);
+}
+
+.unfreeze-toast {
+  padding: 8px 14px;
+  border: 3px solid rgba(255, 255, 255, 0.78);
+  font-size: 28px;
+  animation: unfreeze-toast 880ms ease-out both;
+}
+
+@keyframes deal-card {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -34px, 0) rotate(-5deg) scale(0.86);
+  }
+  68% {
+    opacity: 1;
+    transform: translate3d(0, 6px, 0) rotate(1deg) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+}
+
+@keyframes draw-card {
+  0% {
+    opacity: 0;
+    transform: rotateY(78deg) translate3d(28px, -10px, 0) scale(0.84);
+  }
+  64% {
+    opacity: 1;
+    transform: rotateY(-8deg) translate3d(-3px, 2px, 0) scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: rotateY(0deg) translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes shuffle-card {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  22% {
+    transform: translate3d(-10px, 5px, 0) rotate(-3deg);
+  }
+  48% {
+    transform: translate3d(12px, -6px, 0) rotate(4deg);
+  }
+  74% {
+    transform: translate3d(-5px, -4px, 0) rotate(-2deg);
+  }
+}
+
+@keyframes grab-wave {
+  0% {
+    opacity: 0.95;
+    width: 30px;
+    height: 30px;
+  }
+  100% {
+    opacity: 0;
+    width: min(118vmax, 1180px);
+    height: min(118vmax, 1180px);
+  }
+}
+
+@keyframes score-float {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -35%) scale(0.68);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, -70%) scale(1.14);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -150%) scale(1);
+  }
+}
+
+@keyframes combo-pop {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  28% {
+    transform: scale(1.36) rotate(-3deg);
+  }
+  58% {
+    transform: scale(1.12) rotate(2deg);
+  }
+}
+
+@keyframes frozen-pulse {
+  0%,
+  100% {
+    box-shadow: 0 16px 34px rgba(31, 35, 40, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 16px 34px rgba(31, 35, 40, 0.2),
+      0 0 28px rgba(191, 236, 255, 0.8);
+  }
+}
+
+@keyframes unfreeze-toast {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -35%) scale(0.72);
+    filter: blur(3px);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(-50%, -78%) scale(1.08);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -130%) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board.is-shuffling .word-card,
+  .word-card.deal-in,
+  .word-card.draw-in,
+  .grab-wave,
+  .score-float,
+  .unfreeze-toast,
+  .score-value.combo-burst,
+  .corner-player.frozen {
+    animation: none;
+  }
 }
 
 @media (max-width: 800px), (orientation: portrait) {
