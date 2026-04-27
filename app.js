@@ -87,6 +87,7 @@ const state = {
   history: [],
   boardAnimation: "deal",
   boardAnimationTimer: null,
+  boardAnimationClearFor: null,
   drawnCardId: null,
 };
 
@@ -410,12 +411,8 @@ function renderBoard() {
   $$(".word-card").forEach((button) => {
     button.addEventListener("pointerdown", () => selectCard(button.dataset.card));
   });
-  window.clearTimeout(state.boardAnimationTimer);
   if (state.boardAnimation === "deal" || state.boardAnimation === "draw") {
-    state.boardAnimationTimer = window.setTimeout(() => {
-      state.boardAnimation = null;
-      state.drawnCardId = null;
-    }, state.boardAnimation === "deal" ? 900 : 520);
+    scheduleBoardAnimationClear(state.boardAnimation);
   }
 }
 
@@ -480,15 +477,30 @@ function shuffle(items) {
 
 function shuffleBoard(message = "正在洗牌") {
   state.boardAnimation = "shuffle";
+  state.boardAnimationClearFor = null;
   state.drawnCardId = null;
   clearClaim(message);
   render();
   window.clearTimeout(state.boardAnimationTimer);
   state.boardAnimationTimer = window.setTimeout(() => {
     state.boardAnimation = "deal";
+    state.boardAnimationClearFor = null;
     buildBoard();
     render();
   }, 420);
+}
+
+function scheduleBoardAnimationClear(animationName) {
+  if (state.boardAnimationClearFor === animationName) return;
+  window.clearTimeout(state.boardAnimationTimer);
+  state.boardAnimationClearFor = animationName;
+  state.boardAnimationTimer = window.setTimeout(() => {
+    if (state.boardAnimation !== animationName) return;
+    state.boardAnimation = null;
+    state.boardAnimationClearFor = null;
+    state.drawnCardId = null;
+    $$(".word-card").forEach((card) => card.classList.remove("deal-in", "draw-in"));
+  }, animationName === "deal" ? 900 : 520);
 }
 
 function getCardAnimationClass(card) {
