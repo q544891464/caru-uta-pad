@@ -84,11 +84,15 @@ const state = {
   activePlayer: null,
   selectedCardId: null,
   answerDeadlineId: null,
+  answerStartedAt: 0,
+  answerDuration: 2000,
+  answerTimerId: null,
   history: [],
   boardAnimation: "deal",
   boardAnimationTimer: null,
   boardAnimationClearFor: null,
   drawnCardId: null,
+  pendingConfirm: null,
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -107,10 +111,18 @@ const timer = $("#timer");
 const roundNumber = $("#roundNumber");
 const audioInput = $("#audioInput");
 const audioPlayer = $("#audioPlayer");
+const audioBox = $("#audioBox");
+const answerTimer = $("#answerTimer");
+const answerTimerBar = $("#answerTimerBar");
 const undoAction = $("#undoAction");
 const resultModal = $("#resultModal");
 const winnerTitle = $("#winnerTitle");
 const resultList = $("#resultList");
+const confirmModal = $("#confirmModal");
+const confirmTitle = $("#confirmTitle");
+const confirmText = $("#confirmText");
+const confirmOk = $("#confirmOk");
+const confirmCancel = $("#confirmCancel");
 const wordBankInput = $("#wordBankInput");
 const wordBankCount = $("#wordBankCount");
 const wordBankMessage = $("#wordBankMessage");
@@ -150,6 +162,7 @@ audioInput.addEventListener("change", () => {
   const [file] = audioInput.files;
   if (!file) return;
   audioPlayer.src = URL.createObjectURL(file);
+  audioBox.open = false;
 });
 
 $("#startRound").addEventListener("click", () => {
@@ -167,11 +180,25 @@ $("#newBoard").addEventListener("click", () => {
   shuffleBoard();
 });
 
-$("#finishRound").addEventListener("click", finishRound);
+$("#finishRound").addEventListener("click", () => {
+  requestConfirm({
+    title: "结算本首？",
+    text: "会清空本首拿到的词和连击，进入下一首歌。",
+    onConfirm: finishRound,
+  });
+});
 $("#undoAction").addEventListener("click", undoLastAction);
-$("#endGame").addEventListener("click", showResults);
+$("#endGame").addEventListener("click", () => {
+  requestConfirm({
+    title: "结束本局？",
+    text: "会暂停音乐并打开最终排名，当前分数会保留。",
+    onConfirm: showResults,
+  });
+});
 $("#continueGame").addEventListener("click", () => resultModal.classList.add("hidden"));
 $("#resetGame").addEventListener("click", resetGame);
+confirmCancel.addEventListener("click", closeConfirm);
+confirmOk.addEventListener("click", runConfirm);
 $("#loadWordBank").addEventListener("click", importWordBank);
 $("#exportWordBank").addEventListener("click", fillWordBankEditor);
 $("#resetWordBank").addEventListener("click", resetWordBank);
@@ -217,6 +244,7 @@ function grabPlayer(index) {
   state.activePlayer = index;
   state.selectedCardId = null;
   showGrabWave(index);
+  startAnswerTimer();
   window.clearTimeout(state.answerDeadlineId);
   state.answerDeadlineId = window.setTimeout(() => {
     applyWrong(index, "超时");
@@ -230,6 +258,7 @@ function selectCard(cardId) {
   if (!card || card.claimed) return;
   releaseCardTouchFreezes(state.activePlayer);
   window.clearTimeout(state.answerDeadlineId);
+  stopAnswerTimer();
   state.selectedCardId = cardId;
   render();
 }
@@ -301,6 +330,7 @@ function repeatCapture(playerIndex, captureIndex) {
 
 function clearClaim(message = "听到词后，先按自己的颜色角") {
   window.clearTimeout(state.answerDeadlineId);
+  stopAnswerTimer();
   state.activePlayer = null;
   state.selectedCardId = null;
   claimText.textContent = message;
@@ -446,6 +476,7 @@ function renderCaptures() {
 function renderClaim() {
   if (state.activePlayer === null) {
     claimActions.classList.add("hidden");
+    answerTimer.classList.add("hidden");
     claimPanel.classList.remove("active");
     claimPanel.classList.remove("judging");
     claimPanel.style.removeProperty("--active-color");
@@ -458,12 +489,54 @@ function renderClaim() {
   claimPanel.style.setProperty("--active-color", player.color);
   claimText.textContent = card ? `${player.name}队选择了「${card.word}」，请判定` : `${player.name}队抢到，2 秒内点词卡`;
   claimActions.classList.toggle("hidden", !card);
+  answerTimer.classList.toggle("hidden", Boolean(card));
 }
 
 function renderTimer() {
   const minutes = Math.floor(state.timeLeft / 60);
   const seconds = state.timeLeft % 60;
   timer.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function startAnswerTimer() {
+  state.answerStartedAt = performance.now();
+  answerTimer.classList.remove("hidden");
+  updateAnswerTimer();
+  window.clearInterval(state.answerTimerId);
+  state.answerTimerId = window.setInterval(updateAnswerTimer, 40);
+}
+
+function updateAnswerTimer() {
+  const elapsed = performance.now() - state.answerStartedAt;
+  const ratio = Math.max(0, 1 - elapsed / state.answerDuration);
+  answerTimerBar.style.transform = `scaleX(${ratio})`;
+  answerTimer.classList.toggle("danger", ratio < 0.35);
+}
+
+function stopAnswerTimer() {
+  window.clearInterval(state.answerTimerId);
+  state.answerTimerId = null;
+  answerTimer.classList.add("hidden");
+  answerTimer.classList.remove("danger");
+  answerTimerBar.style.transform = "scaleX(1)";
+}
+
+function requestConfirm({ title, text, onConfirm }) {
+  confirmTitle.textContent = title;
+  confirmText.textContent = text;
+  state.pendingConfirm = onConfirm;
+  confirmModal.classList.remove("hidden");
+}
+
+function closeConfirm() {
+  confirmModal.classList.add("hidden");
+  state.pendingConfirm = null;
+}
+
+function runConfirm() {
+  const action = state.pendingConfirm;
+  closeConfirm();
+  action?.();
 }
 
 function shuffle(items) {

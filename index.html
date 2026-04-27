@@ -84,10 +84,11 @@
                 <p class="micro">第 <span id="roundNumber">1</span> 首歌</p>
                 <strong id="timer">01:00</strong>
               </div>
-              <div class="audio-box">
+              <details class="audio-box" id="audioBox">
+                <summary>音乐</summary>
                 <input id="audioInput" type="file" accept="audio/*" />
                 <audio id="audioPlayer" controls></audio>
-              </div>
+              </details>
               <div class="round-actions">
                 <button id="startRound" type="button">开始</button>
                 <button id="pauseRound" type="button">暂停</button>
@@ -100,6 +101,7 @@
 
             <div class="claim-panel idle" id="claimPanel">
               <span id="claimText">听到词后，先按自己的颜色角</span>
+              <span class="answer-timer hidden" id="answerTimer"><span id="answerTimerBar"></span></span>
               <div class="claim-actions hidden" id="claimActions">
                 <button class="good" id="markCorrect" type="button">正确</button>
                 <button class="bad" id="markWrong" type="button">错误</button>
@@ -122,6 +124,17 @@
           <div class="result-actions">
             <button id="continueGame" type="button">继续玩</button>
             <button id="resetGame" type="button">重新开局</button>
+          </div>
+        </div>
+      </section>
+      <section class="confirm-modal hidden" id="confirmModal" aria-live="polite">
+        <div class="confirm-sheet">
+          <p class="micro">确认操作</p>
+          <h2 id="confirmTitle">确认继续？</h2>
+          <p id="confirmText">这个操作会改变当前局面。</p>
+          <div class="result-actions">
+            <button id="confirmCancel" type="button">取消</button>
+            <button id="confirmOk" type="button">确认</button>
           </div>
         </div>
       </section>

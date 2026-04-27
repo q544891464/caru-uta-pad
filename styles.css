@@ -312,18 +312,39 @@ select {
 }
 
 .audio-box {
-  display: grid;
-  gap: 8px;
+  display: block;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffefa;
+  overflow: hidden;
+}
+
+.audio-box summary {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  cursor: pointer;
+  color: #252a33;
+  font-weight: 900;
+}
+
+.audio-box[open] {
+  padding-bottom: 8px;
 }
 
 #audioInput {
+  display: block;
   max-width: 100%;
+  margin: 0 10px 8px;
   font-size: 13px;
 }
 
 audio {
-  width: 100%;
+  width: calc(100% - 20px);
   height: 34px;
+  margin: 0 10px;
 }
 
 .round-actions {
@@ -344,6 +365,7 @@ audio {
 }
 
 .claim-panel {
+  position: relative;
   min-height: 48px;
   display: flex;
   align-items: center;
@@ -353,6 +375,30 @@ audio {
   border-radius: 8px;
   background: rgba(255, 253, 247, 0.94);
   font-weight: 900;
+}
+
+.answer-timer {
+  position: absolute;
+  right: 10px;
+  bottom: 6px;
+  left: 10px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(37, 42, 51, 0.12);
+  overflow: hidden;
+}
+
+.answer-timer span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--active-color, #252a33);
+  transform-origin: left center;
+}
+
+.answer-timer.danger span {
+  background: #c6403c;
 }
 
 .claim-panel.active {
@@ -379,6 +425,10 @@ audio {
   text-align: center;
   font-size: clamp(34px, 6vw, 72px);
   line-height: 1.2;
+}
+
+.claim-panel.judging .answer-timer {
+  display: none;
 }
 
 .claim-actions {
@@ -628,7 +678,8 @@ audio {
   color: white;
 }
 
-.result-modal {
+.result-modal,
+.confirm-modal {
   position: fixed;
   inset: 0;
   z-index: 20;
@@ -640,7 +691,8 @@ audio {
   backdrop-filter: blur(10px);
 }
 
-.result-sheet {
+.result-sheet,
+.confirm-sheet {
   width: min(620px, 92vw);
   padding: 28px;
   border: 1px solid rgba(255, 255, 255, 0.34);
@@ -649,11 +701,19 @@ audio {
   box-shadow: var(--shadow);
 }
 
-.result-sheet h2 {
+.result-sheet h2,
+.confirm-sheet h2 {
   margin: 0 0 18px;
   font-size: clamp(36px, 6vw, 62px);
   line-height: 1;
   letter-spacing: 0;
+}
+
+.confirm-sheet p:not(.micro) {
+  margin: 0;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.6;
 }
 
 .result-list {
