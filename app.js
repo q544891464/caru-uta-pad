@@ -130,6 +130,14 @@ const effectLayer = $("#effectLayer");
 
 renderWordBankStatus();
 
+gamePanel.addEventListener(
+  "touchmove",
+  (event) => {
+    event.preventDefault();
+  },
+  { passive: false },
+);
+
 setupForm.addEventListener("submit", (event) => {
   event.preventDefault();
   state.playerCount = Number($("#playerCount").value);
@@ -384,6 +392,12 @@ function render() {
   roundNumber.textContent = state.round;
   undoAction.disabled = state.history.length === 0;
   board.style.setProperty("--board-columns", getBoardColumns());
+  board.style.setProperty("--board-rows", getBoardRows());
+  board.style.setProperty("--card-font-size", getCardFontSize());
+  board.style.setProperty("--kana-font-size", getKanaFontSize());
+  board.style.setProperty("--card-padding", getCardPadding());
+  board.style.setProperty("--card-badge-size", getCardBadgeSize());
+  board.style.setProperty("--card-badge-offset", getCardBadgeOffset());
 }
 
 function renderScorebar() {
@@ -730,6 +744,40 @@ function getBoardColumns() {
   if (state.cardCount >= 32) return 8;
   if (state.cardCount >= 24) return 6;
   return 4;
+}
+
+function getBoardRows() {
+  return Math.ceil(state.cardCount / getBoardColumns());
+}
+
+function getCardFontSize() {
+  if (state.cardCount >= 32) return "clamp(18px, 2.45vw, 34px)";
+  if (state.cardCount >= 24) return "clamp(20px, 2.8vw, 38px)";
+  return "clamp(24px, 3.2vw, 44px)";
+}
+
+function getKanaFontSize() {
+  if (state.cardCount >= 32) return "10px";
+  if (state.cardCount >= 24) return "11px";
+  return "13px";
+}
+
+function getCardPadding() {
+  if (state.cardCount >= 32) return "6px";
+  if (state.cardCount >= 24) return "8px";
+  return "10px";
+}
+
+function getCardBadgeSize() {
+  if (state.cardCount >= 32) return "24px";
+  if (state.cardCount >= 24) return "26px";
+  return "30px";
+}
+
+function getCardBadgeOffset() {
+  if (state.cardCount >= 32) return "5px";
+  if (state.cardCount >= 24) return "6px";
+  return "8px";
 }
 
 function loadStoredWordBank() {
