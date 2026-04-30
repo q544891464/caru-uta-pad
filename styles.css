@@ -420,11 +420,15 @@ audio {
   position: fixed;
   inset: 0;
   z-index: 10;
+  width: 100vw;
+  height: 100dvh;
   min-height: 100vh;
   display: grid;
+  grid-template-columns: minmax(0, min(920px, 92vw));
   grid-template-rows: 1fr auto;
   align-items: center;
   justify-content: center;
+  justify-items: center;
   gap: 26px;
   padding: max(34px, env(safe-area-inset-top)) max(34px, env(safe-area-inset-right))
     max(34px, env(safe-area-inset-bottom)) max(34px, env(safe-area-inset-left));
@@ -438,6 +442,12 @@ audio {
   line-height: 1.2;
 }
 
+.claim-panel.judging #claimText {
+  width: 100%;
+  max-width: 920px;
+  overflow-wrap: anywhere;
+}
+
 .claim-panel.judging .answer-timer {
   display: none;
 }
@@ -448,10 +458,11 @@ audio {
 }
 
 .claim-panel.judging .claim-actions {
-  width: min(760px, 92vw);
+  width: min(760px, 100%);
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 18px;
+  justify-self: center;
 }
 
 .claim-actions button {
