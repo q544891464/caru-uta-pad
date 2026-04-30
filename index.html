@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>狩歌 Pad 抢词版</title>
+    <meta name="theme-color" content="#395846" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="狩歌Pad" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -32,6 +38,10 @@
               <option value="24">24 张</option>
               <option value="32">32 张</option>
             </select>
+          </label>
+          <label>
+            词库主题
+            <select id="wordTheme"></select>
           </label>
           <label>
             单轮时长

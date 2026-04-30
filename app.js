@@ -99,6 +99,55 @@ const DEFAULT_WORD_BANK = [
   { word: "片思い", kana: "かたおもい", value: 3 },
 ];
 
+const WORD_THEMES = [
+  { id: "all", name: "不分组：全词库" },
+  {
+    id: "love",
+    name: "恋爱歌",
+    words: [
+      "君", "僕", "私", "好き", "愛", "心", "声", "胸", "涙", "名前", "嘘", "笑う", "泣く", "約束", "未来", "笑顔",
+      "言葉", "さよなら", "ありがとう", "ひとり", "想い", "痛み", "秘密", "大切", "二人", "奇跡", "運命", "記憶",
+      "願い", "宝物", "温もり", "憧れ", "永遠に", "巡り会う", "忘れない", "抱きしめる", "消えない", "片思い",
+    ],
+  },
+  {
+    id: "youth",
+    name: "青春歌",
+    words: [
+      "明日", "手", "今日", "道", "歌", "春", "夏", "朝", "時", "街", "生きる", "未来", "世界", "光", "笑顔", "季節",
+      "希望", "勇気", "自由", "青春", "夢中", "大切", "始まり", "二人", "奇跡", "景色", "鼓動", "旅立ち",
+      "流れ星", "透明", "振り返る", "雨上がり",
+    ],
+  },
+  {
+    id: "night",
+    name: "夜空歌",
+    words: [
+      "夜", "夢", "空", "月", "海", "影", "風", "花", "雨", "夜明け", "星空", "ひとり", "孤独", "景色", "永遠",
+      "記憶", "幻", "面影", "黄昏", "流れ星", "透明", "消えない", "真夜中", "雨上がり", "境界線", "残響",
+      "ため息", "片思い", "願い", "光", "心", "声",
+    ],
+  },
+  {
+    id: "farewell",
+    name: "离别歌",
+    words: [
+      "涙", "明日", "手", "名前", "嘘", "影", "泣く", "約束", "時間", "雨", "言葉", "さよなら", "最後", "終わり",
+      "ひとり", "想い", "痛み", "弱さ", "答え", "孤独", "記憶", "願い", "面影", "温もり", "旅立ち", "黄昏",
+      "忘れない", "振り返る", "雨上がり", "残響", "ため息", "片思い",
+    ],
+  },
+  {
+    id: "energy",
+    name: "热血歌",
+    words: [
+      "今", "夢", "心", "明日", "手", "今日", "道", "歌", "笑う", "生きる", "未来", "世界", "光", "笑顔", "希望",
+      "勇気", "自由", "青春", "夢中", "大切", "始まり", "奇跡", "運命", "軌跡", "鼓動", "願い", "憧れ", "旅立ち",
+      "流れ星", "透明", "消えない", "境界線",
+    ],
+  },
+];
+
 let wordBank = loadStoredWordBank() ?? cloneData(DEFAULT_WORD_BANK);
 
 const PLAYER_PRESETS = [
@@ -117,6 +166,7 @@ const state = {
   timerId: null,
   playerCount: 4,
   cardCount: 16,
+  wordTheme: "all",
   penaltyMode: "light",
   activePlayer: null,
   selectedCardId: null,
@@ -138,6 +188,7 @@ const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const setupPanel = $("#setupPanel");
 const gamePanel = $("#gamePanel");
 const setupForm = $("#setupForm");
+const wordThemeSelect = $("#wordTheme");
 const board = $("#board");
 const scorebar = $("#scorebar");
 const captures = $("#captures");
@@ -171,6 +222,8 @@ const wordBankMessage = $("#wordBankMessage");
 const effectLayer = $("#effectLayer");
 
 renderWordBankStatus();
+renderWordThemeOptions();
+registerServiceWorker();
 
 gamePanel.addEventListener(
   "touchmove",
@@ -184,6 +237,7 @@ setupForm.addEventListener("submit", (event) => {
   event.preventDefault();
   state.playerCount = Number($("#playerCount").value);
   state.cardCount = Number($("#cardCount").value);
+  state.wordTheme = wordThemeSelect.value;
   state.roundLength = Number($("#roundLength").value);
   state.penaltyMode = $("#penaltyMode").value;
   state.players = PLAYER_PRESETS.map((player, index) => ({
@@ -262,6 +316,7 @@ $$(".corner-player").forEach((button) => {
 });
 
 function buildBoard() {
+  const playableBank = getPlayableWordBank();
   const targetCounts = {
     1: Math.ceil(state.cardCount * 0.45),
     2: Math.ceil(state.cardCount * 0.35),
@@ -270,14 +325,14 @@ function buildBoard() {
   targetCounts[3] = state.cardCount - targetCounts[1] - targetCounts[2];
 
   const selected = [1, 2, 3].flatMap((value) =>
-    shuffle(wordBank.filter((card) => card.value === value)).slice(0, targetCounts[value]),
+    shuffle(playableBank.filter((card) => card.value === value)).slice(0, targetCounts[value]),
   );
   const selectedWords = new Set(selected.map((card) => card.word));
-  const fillers = shuffle(wordBank.filter((card) => !selectedWords.has(card.word))).slice(0, state.cardCount - selected.length);
+  const fillers = shuffle(playableBank.filter((card) => !selectedWords.has(card.word))).slice(0, state.cardCount - selected.length);
   const boardCards = [...selected, ...fillers];
 
   while (boardCards.length < state.cardCount) {
-    boardCards.push(shuffle(wordBank)[0]);
+    boardCards.push(shuffle(playableBank)[0]);
   }
 
   state.cards = shuffle(boardCards)
@@ -802,8 +857,9 @@ function makeCard(card, index) {
 function drawReplacementCard(index, removedWord) {
   const currentWords = new Set(state.cards.map((card) => card.word));
   currentWords.delete(removedWord);
-  const pool = wordBank.filter((card) => !currentWords.has(card.word));
-  return makeCard(shuffle(pool.length ? pool : wordBank)[0], index);
+  const playableBank = getPlayableWordBank();
+  const pool = playableBank.filter((card) => !currentWords.has(card.word));
+  return makeCard(shuffle(pool.length ? pool : playableBank)[0], index);
 }
 
 function getBoardColumns() {
@@ -860,6 +916,7 @@ function importWordBank() {
     const parsed = parseWordBankText(wordBankInput.value);
     wordBank = parsed;
     localStorage.setItem(WORD_BANK_STORAGE_KEY, JSON.stringify(wordBank));
+    renderWordThemeOptions();
     renderWordBankStatus(`已保存 ${wordBank.length} 张词卡`, "ok");
   } catch (error) {
     renderWordBankStatus(error.message, "error");
@@ -875,6 +932,7 @@ function resetWordBank() {
   wordBank = cloneData(DEFAULT_WORD_BANK);
   localStorage.removeItem(WORD_BANK_STORAGE_KEY);
   fillWordBankEditor();
+  renderWordThemeOptions();
   renderWordBankStatus(`已恢复内置 ${wordBank.length} 张词卡`, "ok");
 }
 
@@ -882,6 +940,29 @@ function renderWordBankStatus(message, type = "") {
   wordBankCount.textContent = `${wordBank.length} 张`;
   wordBankMessage.textContent = message ?? "支持 CSV/TSV 或 JSON，分值会限制在 1-3。";
   wordBankMessage.className = `word-bank-message ${type}`.trim();
+}
+
+function renderWordThemeOptions() {
+  const currentValue = wordThemeSelect.value || "all";
+  wordThemeSelect.innerHTML = WORD_THEMES.map((theme) => {
+    const count = getThemeWordBank(theme.id, wordBank).length;
+    const suffix = theme.id === "all" ? `${wordBank.length}张` : `${count}张`;
+    const disabled = theme.id !== "all" && count < 12 ? "disabled" : "";
+    return `<option value="${theme.id}" ${disabled}>${theme.name}（${suffix}）</option>`;
+  }).join("");
+  wordThemeSelect.value = wordThemeSelect.querySelector(`option[value="${currentValue}"]:not(:disabled)`) ? currentValue : "all";
+}
+
+function getPlayableWordBank() {
+  const themedBank = getThemeWordBank(state.wordTheme, wordBank);
+  return themedBank.length >= Math.min(12, state.cardCount) ? themedBank : wordBank;
+}
+
+function getThemeWordBank(themeId, sourceBank) {
+  const theme = WORD_THEMES.find((item) => item.id === themeId);
+  if (!theme || theme.id === "all") return sourceBank;
+  const themeWords = new Set(theme.words);
+  return sourceBank.filter((card) => themeWords.has(card.word));
 }
 
 function parseWordBankText(text) {
@@ -943,4 +1024,12 @@ function activeColor() {
 
 function formatSigned(value) {
   return value > 0 ? `+${value}` : String(value);
+}
+
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  if (location.protocol === "file:") return;
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  });
 }
