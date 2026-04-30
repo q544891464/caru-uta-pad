@@ -325,17 +325,6 @@ function applyWrong(playerIndex, reason) {
   render();
 }
 
-function repeatCapture(playerIndex, captureIndex) {
-  const player = state.players[playerIndex];
-  const capture = player?.captures[captureIndex];
-  if (!capture || capture.repeated) return;
-  rememberState();
-  capture.repeated = true;
-  player.score += 1;
-  player.roundScore += 1;
-  render();
-}
-
 function clearClaim(message = "听到词后，先按自己的颜色角") {
   window.clearTimeout(state.answerDeadlineId);
   stopAnswerTimer();
@@ -463,17 +452,17 @@ function renderBoard() {
 function renderCaptures() {
   captures.innerHTML = state.players
     .map(
-      (player, playerIndex) => `
+      (player) => `
         <article class="capture-row ${player.active ? "" : "inactive"}" style="--player-color:${player.color}">
-          <div class="capture-title"><span class="capture-dot"></span>${player.name} 已拿词：点词可记同歌再现 +1</div>
+          <div class="capture-title"><span class="capture-dot"></span>${player.name} 已拿词</div>
           <div class="chips">
             ${player.captures
               .slice(0, 10)
               .map(
-                (capture, captureIndex) => `
-                  <button class="chip ${capture.repeated ? "flipped" : ""}" data-player="${playerIndex}" data-capture="${captureIndex}" type="button">
-                    ${capture.word} +${capture.gained}${capture.repeated ? " 再+1" : ""}${capture.bonusText}
-                  </button>
+                (capture) => `
+                  <span class="chip">
+                    ${capture.word} +${capture.gained}${capture.bonusText}
+                  </span>
                 `,
               )
               .join("")}
@@ -482,9 +471,6 @@ function renderCaptures() {
       `,
     )
     .join("");
-  $$(".chip").forEach((button) => {
-    button.addEventListener("pointerdown", () => repeatCapture(Number(button.dataset.player), Number(button.dataset.capture)));
-  });
 }
 
 function renderClaim() {
