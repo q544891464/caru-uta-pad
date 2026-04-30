@@ -123,6 +123,11 @@ const confirmTitle = $("#confirmTitle");
 const confirmText = $("#confirmText");
 const confirmOk = $("#confirmOk");
 const confirmCancel = $("#confirmCancel");
+const captureModal = $("#captureModal");
+const captureTitle = $("#captureTitle");
+const captureSummary = $("#captureSummary");
+const captureDetailList = $("#captureDetailList");
+const closeCaptureDetail = $("#closeCaptureDetail");
 const wordBankInput = $("#wordBankInput");
 const wordBankCount = $("#wordBankCount");
 const wordBankMessage = $("#wordBankMessage");
@@ -207,6 +212,7 @@ $("#continueGame").addEventListener("click", () => resultModal.classList.add("hi
 $("#resetGame").addEventListener("click", resetGame);
 confirmCancel.addEventListener("click", closeConfirm);
 confirmOk.addEventListener("click", runConfirm);
+closeCaptureDetail.addEventListener("click", closeCaptureModal);
 $("#loadWordBank").addEventListener("click", importWordBank);
 $("#exportWordBank").addEventListener("click", fillWordBankEditor);
 $("#resetWordBank").addEventListener("click", resetWordBank);
@@ -452,12 +458,15 @@ function renderBoard() {
 function renderCaptures() {
   captures.innerHTML = state.players
     .map(
-      (player) => `
-        <article class="capture-row ${player.active ? "" : "inactive"}" style="--player-color:${player.color}">
-          <div class="capture-title"><span class="capture-dot"></span>${player.name} 已拿词</div>
+      (player, playerIndex) => `
+        <button class="capture-row ${player.active ? "" : "inactive"}" style="--player-color:${player.color}" data-player="${playerIndex}" type="button">
+          <div class="capture-title">
+            <span><span class="capture-dot"></span>${player.name} 已拿词</span>
+            <strong>${player.captures.length}张 / ${formatSigned(player.roundScore)}</strong>
+          </div>
           <div class="chips">
             ${player.captures
-              .slice(0, 10)
+              .slice(0, 8)
               .map(
                 (capture) => `
                   <span class="chip">
@@ -466,11 +475,15 @@ function renderCaptures() {
                 `,
               )
               .join("")}
+            ${player.captures.length > 8 ? `<span class="chip more">+${player.captures.length - 8}</span>` : ""}
           </div>
-        </article>
+        </button>
       `,
     )
     .join("");
+  $$(".capture-row").forEach((button) => {
+    button.addEventListener("click", () => showCaptureDetail(Number(button.dataset.player)));
+  });
 }
 
 function renderClaim() {
@@ -628,10 +641,40 @@ function showResults() {
   resultModal.classList.remove("hidden");
 }
 
+function showCaptureDetail(playerIndex) {
+  const player = state.players[playerIndex];
+  if (!player?.active) return;
+  captureTitle.textContent = `${player.name}队已拿词`;
+  captureSummary.innerHTML = `
+    <span style="--player-color:${player.color}"><span class="capture-dot"></span>${player.captures.length} 张</span>
+    <strong>本首 ${formatSigned(player.roundScore)}</strong>
+  `;
+  captureDetailList.innerHTML = player.captures.length
+    ? player.captures
+        .map(
+          (capture, index) => `
+            <div class="capture-detail-row">
+              <span>${index + 1}</span>
+              <strong>${capture.word}</strong>
+              <small>${capture.kana || " "}</small>
+              <b>+${capture.gained}</b>
+            </div>
+          `,
+        )
+        .join("")
+    : `<div class="empty-detail">还没有拿到词</div>`;
+  captureModal.classList.remove("hidden");
+}
+
+function closeCaptureModal() {
+  captureModal.classList.add("hidden");
+}
+
 function resetGame() {
   stopTimer();
   audioPlayer.pause();
   resultModal.classList.add("hidden");
+  closeCaptureModal();
   gamePanel.classList.add("hidden");
   setupPanel.classList.remove("hidden");
   clearClaim();
