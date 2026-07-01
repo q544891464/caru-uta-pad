@@ -12,6 +12,37 @@ D:\Code\caru-uta-pad\index.html
 
 如果浏览器限制本地音频文件，也可以用任意静态服务器托管这个目录。
 
+当前服务器部署：
+
+```text
+http://服务器IP:8090/
+```
+
+systemd 服务：
+
+```bash
+systemctl status caru-uta-pad.service
+systemctl restart caru-uta-pad.service
+```
+
+网易云音乐 API 运行在同一台服务器的 3000 端口，前端服务会通过 `/ncm` 同源代理转发请求。进入游戏后展开“音乐”，可以搜索网易云歌曲，点选结果会自动加载播放地址和歌词。本地音频上传仍然可用。
+
+### AI 歌词词库
+
+动态歌词词库支持通过 AIHubMix 调用 `deepseek-v4-flash` 分词。配置文件在：
+
+```text
+/root/caru-uta-pad/aihubmix.config.json
+```
+
+把 `enabled` 改成 `true`，并填写 `apiKey` 后重启服务：
+
+```bash
+systemctl restart caru-uta-pad.service
+```
+
+如果没有配置 API key，或 AI 调用失败，系统会直接使用原本词库，不再进行本地分词。AI 词卡会在后台分段生成，不阻塞歌曲加载和播放；同一份歌词会写入浏览器缓存和服务端 `.ai-word-cache.json`，重复点同一首歌时会直接复用结果。开局播放后牌面会每 15 秒自动换牌，并在提示区显示换牌倒计时，便于后台生成的歌词词卡进入桌面。
+
 ## 玩法落地
 
 1. 开局选择玩家人数、词卡数量、单轮时长和惩罚模式。

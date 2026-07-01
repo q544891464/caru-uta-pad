@@ -1,4 +1,12 @@
 const WORD_BANK_STORAGE_KEY = "caru-uta-pad-word-bank";
+const NCM_API_BASE_STORAGE_KEY = "caru-uta-pad-ncm-api-base";
+const AI_WORD_CACHE_STORAGE_KEY = "caru-uta-pad-ai-word-cache";
+const DEFAULT_NCM_API_PORT = "3000";
+const MAX_DYNAMIC_WORDS = 80;
+const AI_WORD_CACHE_LIMIT = 60;
+const BOARD_REFRESH_INTERVAL_MS = 15000;
+const BOARD_REFRESH_TICK_MS = 250;
+const SOUND_ENABLED = true;
 
 const DEFAULT_WORD_BANK = [
   { word: "君", kana: "きみ", value: 1 },
@@ -97,6 +105,70 @@ const DEFAULT_WORD_BANK = [
   { word: "残響", kana: "ざんきょう", value: 3 },
   { word: "ため息", kana: "ためいき", value: 3 },
   { word: "片思い", kana: "かたおもい", value: 3 },
+  { word: "桜", kana: "さくら", value: 1 },
+  { word: "雪", kana: "ゆき", value: 1 },
+  { word: "雲", kana: "くも", value: 1 },
+  { word: "虹", kana: "にじ", value: 1 },
+  { word: "扉", kana: "とびら", value: 1 },
+  { word: "翼", kana: "つばさ", value: 1 },
+  { word: "涙声", kana: "なみだごえ", value: 2 },
+  { word: "微笑み", kana: "ほほえみ", value: 2 },
+  { word: "旋律", kana: "せんりつ", value: 2 },
+  { word: "メロディ", kana: "めろでぃ", value: 2 },
+  { word: "リズム", kana: "りずむ", value: 2 },
+  { word: "鼓膜", kana: "こまく", value: 2 },
+  { word: "叫ぶ", kana: "さけぶ", value: 2 },
+  { word: "走る", kana: "はしる", value: 2 },
+  { word: "飛ぶ", kana: "とぶ", value: 2 },
+  { word: "守る", kana: "まもる", value: 2 },
+  { word: "信じる", kana: "しんじる", value: 2 },
+  { word: "傷跡", kana: "きずあと", value: 2 },
+  { word: "祈り", kana: "いのり", value: 2 },
+  { word: "指先", kana: "ゆびさき", value: 2 },
+  { word: "足音", kana: "あしおと", value: 2 },
+  { word: "夕焼け", kana: "ゆうやけ", value: 2 },
+  { word: "青空", kana: "あおぞら", value: 2 },
+  { word: "帰り道", kana: "かえりみち", value: 2 },
+  { word: "放課後", kana: "ほうかご", value: 2 },
+  { word: "初恋", kana: "はつこい", value: 2 },
+  { word: "恋心", kana: "こいごころ", value: 2 },
+  { word: "告白", kana: "こくはく", value: 2 },
+  { word: "笑い声", kana: "わらいごえ", value: 2 },
+  { word: "温度", kana: "おんど", value: 2 },
+  { word: "まっすぐ", kana: "まっすぐ", value: 2 },
+  { word: "キラキラ", kana: "きらきら", value: 2 },
+  { word: "ドキドキ", kana: "どきどき", value: 2 },
+  { word: "バイバイ", kana: "ばいばい", value: 2 },
+  { word: "夜風", kana: "よかぜ", value: 2 },
+  { word: "月明かり", kana: "つきあかり", value: 3 },
+  { word: "流星", kana: "りゅうせい", value: 3 },
+  { word: "銀河", kana: "ぎんが", value: 3 },
+  { word: "革命", kana: "かくめい", value: 3 },
+  { word: "衝動", kana: "しょうどう", value: 3 },
+  { word: "限界", kana: "げんかい", value: 3 },
+  { word: "絶望", kana: "ぜつぼう", value: 3 },
+  { word: "幻想", kana: "げんそう", value: 3 },
+  { word: "残酷", kana: "ざんこく", value: 3 },
+  { word: "覚醒", kana: "かくせい", value: 3 },
+  { word: "運命線", kana: "うんめいせん", value: 3 },
+  { word: "透明な心", kana: "とうめいなこころ", value: 3 },
+  { word: "消えた約束", kana: "きえたやくそく", value: 3 },
+  { word: "雨音", kana: "あまおと", value: 2 },
+  { word: "傘", kana: "かさ", value: 1 },
+  { word: "濡れる", kana: "ぬれる", value: 2 },
+  { word: "水たまり", kana: "みずたまり", value: 3 },
+  { word: "木漏れ日", kana: "こもれび", value: 3 },
+  { word: "ぬくもり", kana: "ぬくもり", value: 2 },
+  { word: "眠る", kana: "ねむる", value: 2 },
+  { word: "揺れる", kana: "ゆれる", value: 2 },
+  { word: "記念日", kana: "きねんび", value: 3 },
+  { word: "アルバム", kana: "あるばむ", value: 3 },
+  { word: "写真", kana: "しゃしん", value: 2 },
+  { word: "手紙", kana: "てがみ", value: 2 },
+  { word: "思い出", kana: "おもいで", value: 2 },
+  { word: "窓", kana: "まど", value: 1 },
+  { word: "夕暮れ", kana: "ゆうぐれ", value: 2 },
+  { word: "遠回り", kana: "とおまわり", value: 3 },
 ];
 
 const WORD_THEMES = [
@@ -146,6 +218,51 @@ const WORD_THEMES = [
       "流れ星", "透明", "消えない", "境界線",
     ],
   },
+  {
+    id: "anime",
+    name: "动漫歌",
+    words: [
+      "君", "僕", "夢", "心", "明日", "手", "声", "道", "歌", "翼", "扉", "光", "希望", "勇気", "自由", "未来",
+      "世界", "奇跡", "運命", "軌跡", "鼓動", "願い", "守る", "信じる", "走る", "飛ぶ", "革命", "衝動", "限界",
+      "覚醒", "運命線", "残酷", "幻想", "星空", "流星", "銀河",
+    ],
+  },
+  {
+    id: "rock",
+    name: "摇滚歌",
+    words: [
+      "今", "夢", "叫ぶ", "走る", "鼓動", "衝動", "限界", "革命", "自由", "強さ", "弱さ", "傷跡", "絶望", "希望",
+      "リズム", "メロディ", "旋律", "鼓膜", "世界", "光", "影", "夜", "街", "声", "生きる", "境界線", "残響",
+      "まっすぐ", "消えない", "透明",
+    ],
+  },
+  {
+    id: "healing",
+    name: "治愈歌",
+    words: [
+      "空", "心", "朝", "春", "花", "風", "雨", "虹", "雲", "青空", "木漏れ日", "ぬくもり", "温もり", "微笑み",
+      "眠る", "揺れる", "祈り", "ありがとう", "大切", "笑顔", "希望", "季節", "時間", "言葉", "声", "手",
+      "宝物", "透明な心",
+    ],
+  },
+  {
+    id: "memory",
+    name: "回忆歌",
+    words: [
+      "記憶", "思い出", "時", "季節", "時間", "写真", "手紙", "アルバム", "記念日", "名前", "約束", "最後",
+      "始まり", "終わり", "帰り道", "放課後", "夕焼け", "夕暮れ", "遠回り", "面影", "宝物", "忘れない",
+      "振り返る", "消えた約束", "さよなら", "ありがとう",
+    ],
+  },
+  {
+    id: "rain",
+    name: "雨天歌",
+    words: [
+      "雨", "雨音", "雨上がり", "傘", "濡れる", "水たまり", "涙", "涙声", "夜", "夜風", "街", "影", "窓",
+      "ため息", "片思い", "孤独", "痛み", "弱さ", "嘘", "記憶", "面影", "黄昏", "夕暮れ", "透明", "残響",
+      "月明かり",
+    ],
+  },
 ];
 
 let wordBank = loadStoredWordBank() ?? cloneData(DEFAULT_WORD_BANK);
@@ -161,9 +278,11 @@ const state = {
   players: [],
   cards: [],
   round: 1,
-  roundLength: 60,
-  timeLeft: 60,
+  timeLeft: null,
   timerId: null,
+  boardRefreshTimerId: null,
+  boardRefreshDeadline: 0,
+  claimNoticeUntil: 0,
   playerCount: 4,
   cardCount: 16,
   wordTheme: "all",
@@ -180,6 +299,26 @@ const state = {
   boardAnimationClearFor: null,
   drawnCardId: null,
   pendingConfirm: null,
+  claimLyricIndex: -1,
+  ncmSearchResults: [],
+  ncmSearchLoading: false,
+  ncmStatus: "可搜索网易云歌曲，也可继续上传本地音频。",
+  ncmStatusType: "",
+  ncmCurrentSong: null,
+  ncmLyrics: [],
+  ncmActiveLyricIndex: -1,
+  songWordBank: [],
+  ncmLoginStatus: "unknown",
+  ncmLoginMessage: "登录后可尝试播放账号有权限的完整歌曲。",
+  ncmQrKey: "",
+  ncmQrImage: "",
+  ncmQrPollingId: null,
+  audioContext: null,
+  dragCardId: null,
+  dragPointerId: null,
+  dragSource: null,
+  dragGhost: null,
+  dragDropPlayer: null,
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -190,6 +329,7 @@ const gamePanel = $("#gamePanel");
 const setupForm = $("#setupForm");
 const wordThemeSelect = $("#wordTheme");
 const board = $("#board");
+const boardRefreshCountdown = $("#boardRefreshCountdown");
 const scorebar = $("#scorebar");
 const captures = $("#captures");
 const claimPanel = $("#claimPanel");
@@ -200,6 +340,19 @@ const roundNumber = $("#roundNumber");
 const audioInput = $("#audioInput");
 const audioPlayer = $("#audioPlayer");
 const audioBox = $("#audioBox");
+const ncmSearchForm = $("#ncmSearchForm");
+const ncmSearchInput = $("#ncmSearchInput");
+const ncmSearchButton = $("#ncmSearchButton");
+const ncmStatus = $("#ncmStatus");
+const ncmResults = $("#ncmResults");
+const ncmCurrent = $("#ncmCurrent");
+const ncmLyrics = $("#ncmLyrics");
+const ncmLoginTitle = $("#ncmLoginTitle");
+const ncmLoginText = $("#ncmLoginText");
+const ncmLoginButton = $("#ncmLoginButton");
+const ncmLoginQr = $("#ncmLoginQr");
+const ncmLoginQrImage = $("#ncmLoginQrImage");
+const ncmLoginQrText = $("#ncmLoginQrText");
 const answerTimer = $("#answerTimer");
 const answerTimerBar = $("#answerTimerBar");
 const undoAction = $("#undoAction");
@@ -224,6 +377,7 @@ const effectLayer = $("#effectLayer");
 renderWordBankStatus();
 renderWordThemeOptions();
 registerServiceWorker();
+checkNcmLoginStatus();
 
 gamePanel.addEventListener(
   "touchmove",
@@ -233,15 +387,19 @@ gamePanel.addEventListener(
   { passive: false },
 );
 
+document.addEventListener("pointerdown", unlockSound, { once: true });
+document.addEventListener("keydown", unlockSound, { once: true });
+
 setupForm.addEventListener("submit", (event) => {
   event.preventDefault();
+  unlockSound();
   state.playerCount = Number($("#playerCount").value);
   state.cardCount = Number($("#cardCount").value);
   state.wordTheme = wordThemeSelect.value;
-  state.roundLength = Number($("#roundLength").value);
   state.penaltyMode = $("#penaltyMode").value;
   state.players = PLAYER_PRESETS.map((player, index) => ({
     ...player,
+    name: state.playerCount === 1 && index === 0 ? "单人" : player.name,
     active: index < state.playerCount,
     score: 0,
     roundScore: 0,
@@ -252,21 +410,61 @@ setupForm.addEventListener("submit", (event) => {
     captures: [],
   }));
   state.round = 1;
-  state.timeLeft = state.roundLength;
+  updateSongTimeLeft();
   state.history = [];
   state.boardAnimation = "deal";
   state.drawnCardId = null;
+  gamePanel.dataset.playerCount = String(state.playerCount);
   setupPanel.classList.add("hidden");
   gamePanel.classList.remove("hidden");
   buildBoard();
   render();
+  startBoardRefreshTimer();
 });
 
 audioInput.addEventListener("change", () => {
   const [file] = audioInput.files;
   if (!file) return;
+  resetNcmPlaybackState("已切换到本地音频");
   audioPlayer.src = URL.createObjectURL(file);
+  state.timeLeft = null;
+  renderTimer();
   audioBox.open = false;
+});
+
+ncmSearchForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  searchNcmSongs();
+});
+
+ncmLoginButton.addEventListener("click", startNcmQrLogin);
+audioPlayer.addEventListener("loadedmetadata", () => {
+  updateSongTimeLeft();
+  renderTimer();
+});
+audioPlayer.addEventListener("durationchange", () => {
+  updateSongTimeLeft();
+  renderTimer();
+});
+audioPlayer.addEventListener("timeupdate", () => {
+  renderActiveLyricLine();
+  updateSongTimeLeft();
+  renderTimer();
+});
+audioPlayer.addEventListener("play", () => {
+  startTimer();
+  renderNcmPanel();
+});
+audioPlayer.addEventListener("pause", () => {
+  stopTimer();
+  renderNcmPanel();
+});
+audioPlayer.addEventListener("ended", () => {
+  stopTimer();
+  updateSongTimeLeft();
+  clearClaim("本首结束，点结算进入下一首");
+  renderNcmPanel();
+  renderTimer();
 });
 
 $("#startRound").addEventListener("click", () => {
@@ -312,7 +510,7 @@ $("#markWrong").addEventListener("click", markWrong);
 $("#cancelClaim").addEventListener("click", () => clearClaim());
 
 $$(".corner-player").forEach((button) => {
-  button.addEventListener("pointerdown", () => grabPlayer(Number(button.dataset.player)));
+  button.addEventListener("pointerdown", (event) => event.preventDefault());
 });
 
 function buildBoard() {
@@ -349,6 +547,7 @@ function grabPlayer(index) {
 
   state.activePlayer = index;
   state.selectedCardId = null;
+  state.claimLyricIndex = getCurrentLyricIndex();
   showGrabWave(index);
   startAnswerTimer();
   window.clearTimeout(state.answerDeadlineId);
@@ -358,7 +557,19 @@ function grabPlayer(index) {
   render();
 }
 
+function handleWordCardPointerDown(event, cardId) {
+  if (isSinglePlayerMode()) {
+    selectCard(cardId);
+    return;
+  }
+  startCardDrag(event, cardId);
+}
+
 function selectCard(cardId) {
+  if (state.activePlayer === null && isSinglePlayerMode()) {
+    selectSinglePlayerCard(cardId);
+    return;
+  }
   if (state.activePlayer === null) return;
   const card = state.cards.find((item) => item.id === cardId);
   if (!card || card.claimed) return;
@@ -366,7 +577,198 @@ function selectCard(cardId) {
   window.clearTimeout(state.answerDeadlineId);
   stopAnswerTimer();
   state.selectedCardId = cardId;
-  render();
+  if (isCardInClaimLyricWindow(card)) {
+    markCorrect();
+  } else {
+    const reason = state.claimLyricIndex < 0 ? "无歌词" : "未命中当前歌词";
+    applyWrong(state.activePlayer, reason);
+  }
+}
+
+function selectSinglePlayerCard(cardId) {
+  const player = state.players[0];
+  if (!player?.active || player.frozenUntilCardTouch || Date.now() < player.frozenUntil) return;
+  const card = state.cards.find((item) => item.id === cardId);
+  if (!card || card.claimed) return;
+  state.activePlayer = 0;
+  state.selectedCardId = cardId;
+  state.claimLyricIndex = getCurrentLyricIndex();
+  releaseCardTouchFreezes(0);
+  if (!state.ncmLyrics.length || isCardInClaimLyricWindow(card)) {
+    markCorrect();
+  } else {
+    applyWrong(0, state.claimLyricIndex < 0 ? "无歌词" : "未命中当前歌词");
+  }
+}
+
+function startCardDrag(event, cardId) {
+  const sourceButton = event.currentTarget;
+  const card = state.cards.find((item) => item.id === cardId);
+  if (!card || card.claimed || state.boardAnimation === "shuffle" || state.activePlayer !== null) return;
+  event.preventDefault();
+  unlockSound();
+  state.dragCardId = cardId;
+  state.dragPointerId = event.pointerId;
+  state.dragSource = sourceButton;
+  state.dragDropPlayer = null;
+  sourceButton.classList.add("dragging");
+  sourceButton.setPointerCapture?.(event.pointerId);
+  state.dragGhost = createDragGhost(sourceButton);
+  document.body.classList.add("is-card-dragging");
+  updateDragPosition(event.clientX, event.clientY);
+  setDropZonesReady(true);
+  sourceButton.addEventListener("lostpointercapture", handleLostPointerCapture);
+  window.addEventListener("pointermove", handleCardDragMove, { capture: true });
+  window.addEventListener("pointerup", finishCardDrag, { capture: true });
+  window.addEventListener("pointercancel", cancelCardDrag, { capture: true });
+  window.addEventListener("blur", cancelCardDragFromSystem);
+  document.addEventListener("visibilitychange", handleDragVisibilityChange);
+  document.addEventListener("pointerdown", blockExtraPointerDuringDrag, { capture: true });
+  document.addEventListener("touchstart", blockExtraTouchDuringDrag, { capture: true, passive: false });
+}
+
+function createDragGhost(sourceButton) {
+  const rect = sourceButton.getBoundingClientRect();
+  const ghost = sourceButton.cloneNode(true);
+  ghost.className = `${sourceButton.className} drag-ghost`;
+  ghost.style.width = `${rect.width}px`;
+  ghost.style.height = `${rect.height}px`;
+  document.body.append(ghost);
+  return ghost;
+}
+
+function handleCardDragMove(event) {
+  if (event.pointerId !== state.dragPointerId) return;
+  event.preventDefault();
+  event.stopPropagation();
+  updateDragPosition(event.clientX, event.clientY);
+}
+
+function updateDragPosition(clientX, clientY) {
+  if (state.dragGhost) {
+    state.dragGhost.style.left = `${clientX}px`;
+    state.dragGhost.style.top = `${clientY}px`;
+  }
+  const dropPlayer = getDropPlayerAt(clientX, clientY);
+  state.dragDropPlayer = dropPlayer;
+  updateDropZoneHighlights(dropPlayer);
+}
+
+function finishCardDrag(event) {
+  if (event.pointerId !== state.dragPointerId) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const cardId = state.dragCardId;
+  const playerIndex = state.dragDropPlayer;
+  cleanupCardDrag();
+  if (cardId && playerIndex !== null) {
+    dropCardOnPlayer(cardId, playerIndex);
+  } else {
+    showTemporaryClaimNotice("把词卡拖到自己的区域", 1800);
+  }
+}
+
+function cancelCardDrag(event) {
+  if (event?.pointerId !== undefined && event.pointerId !== state.dragPointerId) return;
+  cleanupCardDrag();
+}
+
+function cleanupCardDrag() {
+  const source = state.dragSource;
+  if (source && state.dragPointerId !== null) {
+    try {
+      source.releasePointerCapture?.(state.dragPointerId);
+    } catch {}
+    source.removeEventListener("lostpointercapture", handleLostPointerCapture);
+  }
+  window.removeEventListener("pointermove", handleCardDragMove, { capture: true });
+  window.removeEventListener("pointerup", finishCardDrag, { capture: true });
+  window.removeEventListener("pointercancel", cancelCardDrag, { capture: true });
+  window.removeEventListener("blur", cancelCardDragFromSystem);
+  document.removeEventListener("visibilitychange", handleDragVisibilityChange);
+  document.removeEventListener("pointerdown", blockExtraPointerDuringDrag, { capture: true });
+  document.removeEventListener("touchstart", blockExtraTouchDuringDrag, { capture: true });
+  $$(".word-card.dragging").forEach((card) => card.classList.remove("dragging"));
+  state.dragGhost?.remove();
+  state.dragCardId = null;
+  state.dragPointerId = null;
+  state.dragSource = null;
+  state.dragGhost = null;
+  state.dragDropPlayer = null;
+  document.body.classList.remove("is-card-dragging");
+  setDropZonesReady(false);
+  updateDropZoneHighlights(null);
+}
+
+function handleLostPointerCapture(event) {
+  if (event.pointerId !== state.dragPointerId) return;
+  window.setTimeout(() => {
+    if (state.dragPointerId === event.pointerId) cancelCardDrag(event);
+  }, 80);
+}
+
+function cancelCardDragFromSystem() {
+  if (state.dragPointerId !== null) cleanupCardDrag();
+}
+
+function handleDragVisibilityChange() {
+  if (document.hidden) cancelCardDragFromSystem();
+}
+
+function blockExtraTouchDuringDrag(event) {
+  if (state.dragPointerId === null) return;
+  event.preventDefault();
+  event.stopPropagation();
+}
+
+function blockExtraPointerDuringDrag(event) {
+  if (state.dragPointerId === null || event.pointerId === state.dragPointerId) return;
+  event.preventDefault();
+  event.stopPropagation();
+}
+
+function getDropPlayerAt(clientX, clientY) {
+  const zone = document
+    .elementsFromPoint(clientX, clientY)
+    .find((element) => element.classList?.contains("corner-player") && !element.classList.contains("hidden"));
+  if (!zone) return null;
+  const playerIndex = Number(zone.dataset.player);
+  const player = state.players[playerIndex];
+  if (!player?.active || player.frozenUntilCardTouch || Date.now() < player.frozenUntil) return null;
+  return playerIndex;
+}
+
+function updateDropZoneHighlights(playerIndex) {
+  $$(".corner-player").forEach((zone) => {
+    zone.classList.toggle("drop-hover", Number(zone.dataset.player) === playerIndex);
+  });
+}
+
+function setDropZonesReady(isReady) {
+  $$(".corner-player").forEach((zone) => {
+    const playerIndex = Number(zone.dataset.player);
+    const player = state.players[playerIndex];
+    const enabled = Boolean(player?.active && !player.frozenUntilCardTouch && Date.now() >= player.frozenUntil);
+    zone.classList.toggle("drop-ready", isReady && enabled);
+  });
+}
+
+function dropCardOnPlayer(cardId, playerIndex) {
+  const player = state.players[playerIndex];
+  const card = state.cards.find((item) => item.id === cardId);
+  if (!player?.active || !card || card.claimed) return;
+  if (player.frozenUntilCardTouch || Date.now() < player.frozenUntil) return;
+  state.activePlayer = playerIndex;
+  state.selectedCardId = cardId;
+  state.claimLyricIndex = getCurrentLyricIndex();
+  releaseCardTouchFreezes(playerIndex);
+  showGrabWave(playerIndex);
+  if (isCardInClaimLyricWindow(card)) {
+    markCorrect();
+  } else {
+    const reason = state.claimLyricIndex < 0 ? "无歌词" : "未命中当前歌词";
+    applyWrong(playerIndex, reason);
+  }
 }
 
 function markCorrect() {
@@ -390,6 +792,7 @@ function markCorrect() {
     bonusText: comboBonus ? ` +${comboBonus}连击` : "",
   });
   showScoreFloat(cardIndex, gained, comboBonus);
+  playSound(comboBonus ? "combo" : "correct");
   if (comboBonus) {
     triggerComboBurst(state.activePlayer);
   }
@@ -413,22 +816,25 @@ function applyWrong(playerIndex, reason) {
   player.score -= 1;
   player.roundScore -= 1;
   player.combo = 0;
-  if (state.penaltyMode === "standard") {
+  if (state.penaltyMode === "standard" && !isSinglePlayerMode()) {
     player.frozenUntilCardTouch = true;
   } else {
     player.frozenUntil = Date.now() + 2000;
     window.setTimeout(render, 2050);
   }
+  playSound("wrong");
   clearClaim(`${player.name} ${reason}，-1`);
   render();
 }
 
-function clearClaim(message = "听到词后，先按自己的颜色角") {
+function clearClaim(message = null) {
   window.clearTimeout(state.answerDeadlineId);
   stopAnswerTimer();
   state.activePlayer = null;
   state.selectedCardId = null;
-  claimText.textContent = message;
+  state.claimLyricIndex = -1;
+  state.claimNoticeUntil = 0;
+  claimText.textContent = message ?? getIdleClaimText();
   claimPanel.className = "claim-panel idle";
   claimActions.classList.add("hidden");
   $$(".corner-player").forEach((button) => button.classList.remove("active"));
@@ -439,7 +845,7 @@ function finishRound() {
   audioPlayer.pause();
   state.history = [];
   state.round += 1;
-  state.timeLeft = state.roundLength;
+  state.timeLeft = null;
   state.players.forEach((player) => {
     player.roundScore = 0;
     player.combo = 0;
@@ -453,20 +859,79 @@ function finishRound() {
 
 function startTimer() {
   if (state.timerId) return;
+  updateSongTimeLeft();
+  renderTimer();
+  startBoardRefreshTimer();
   state.timerId = window.setInterval(() => {
-    state.timeLeft = Math.max(0, state.timeLeft - 1);
+    updateSongTimeLeft();
     renderTimer();
-    if (state.timeLeft === 0) {
+    if (state.timeLeft === 0 && hasKnownAudioDuration()) {
       stopTimer();
-      audioPlayer.pause();
       clearClaim("本首结束，点结算进入下一首");
     }
-  }, 1000);
+  }, 250);
 }
 
 function stopTimer() {
   window.clearInterval(state.timerId);
   state.timerId = null;
+  stopBoardRefreshTimer();
+}
+
+function startBoardRefreshTimer() {
+  stopBoardRefreshTimer();
+  resetBoardRefreshDeadline(true);
+  updateBoardRefreshCountdown();
+  state.boardRefreshTimerId = window.setInterval(refreshBoardFromTimer, BOARD_REFRESH_TICK_MS);
+}
+
+function stopBoardRefreshTimer() {
+  window.clearInterval(state.boardRefreshTimerId);
+  state.boardRefreshTimerId = null;
+  state.boardRefreshDeadline = 0;
+  updateBoardRefreshCountdown();
+}
+
+function refreshBoardFromTimer() {
+  if (gamePanel.classList.contains("hidden")) return;
+  if (!state.boardRefreshDeadline) return;
+  const remainingMs = state.boardRefreshDeadline - Date.now();
+  if (remainingMs > 0) {
+    updateBoardRefreshCountdown(Math.ceil(remainingMs / 1000));
+    return;
+  }
+  if (state.activePlayer !== null || state.boardAnimation === "shuffle") {
+    state.boardRefreshDeadline = Date.now() + 1000;
+    updateBoardRefreshCountdown(1);
+    return;
+  }
+  resetBoardRefreshDeadline();
+  shuffleBoard("15 秒换牌");
+}
+
+function resetBoardRefreshDeadline(force = false) {
+  if (!force && !state.boardRefreshTimerId && !state.timerId) return;
+  state.boardRefreshDeadline = Date.now() + BOARD_REFRESH_INTERVAL_MS;
+}
+
+function updateBoardRefreshCountdown(secondsLeft = null) {
+  const seconds = secondsLeft ?? Math.max(0, Math.ceil((state.boardRefreshDeadline - Date.now()) / 1000));
+  boardRefreshCountdown.textContent = state.boardRefreshTimerId && state.boardRefreshDeadline ? `换牌 ${seconds}s` : "换牌 --";
+  if (state.activePlayer !== null || Date.now() < state.claimNoticeUntil) return;
+  if (!state.boardRefreshTimerId || !state.boardRefreshDeadline) {
+    if (claimText.textContent.startsWith("下次换牌")) {
+      claimText.textContent = getIdleClaimText();
+    }
+    return;
+  }
+  claimText.textContent = `下次换牌 ${seconds} 秒`;
+}
+
+function showTemporaryClaimNotice(message, durationMs = 3500) {
+  if (state.activePlayer !== null) return;
+  state.claimNoticeUntil = Date.now() + durationMs;
+  claimText.textContent = message;
+  window.setTimeout(updateBoardRefreshCountdown, durationMs + 50);
 }
 
 function render() {
@@ -475,6 +940,7 @@ function render() {
   renderBoard();
   renderCaptures();
   renderClaim();
+  renderNcmPanel();
   renderTimer();
   roundNumber.textContent = state.round;
   undoAction.disabled = state.history.length === 0;
@@ -485,13 +951,15 @@ function render() {
   board.style.setProperty("--card-padding", getCardPadding());
   board.style.setProperty("--card-badge-size", getCardBadgeSize());
   board.style.setProperty("--card-badge-offset", getCardBadgeOffset());
+  board.style.setProperty("--board-gap", getBoardGap());
 }
 
 function renderScorebar() {
   scorebar.innerHTML = state.players
+    .filter((player) => player.active)
     .map(
       (player) => `
-        <article class="score-card ${player.active ? "" : "inactive"}" style="--player-color:${player.color}">
+        <article class="score-card" style="--player-color:${player.color}">
           <span class="score-dot"></span>
           <div>
             <div class="score-name">${player.name}队</div>
@@ -510,10 +978,10 @@ function renderCorners() {
     const player = state.players[index];
     const frozen = player?.frozenUntilCardTouch || Date.now() < player?.frozenUntil;
     button.style.setProperty("--player-color", player?.color ?? "#999");
-    button.classList.toggle("hidden", !player?.active);
+    button.classList.toggle("hidden", isSinglePlayerMode() || !player?.active);
     button.classList.toggle("frozen", Boolean(frozen));
     button.classList.toggle("active", state.activePlayer === index);
-    button.textContent = frozen ? `${player.name} 冻结` : `${player.name} 抢`;
+    button.textContent = frozen ? `${player.name} 冻结` : `${player.name}区`;
   });
 }
 
@@ -540,7 +1008,7 @@ function renderBoard() {
     })
     .join("");
   $$(".word-card").forEach((button) => {
-    button.addEventListener("pointerdown", () => selectCard(button.dataset.card));
+    button.addEventListener("pointerdown", (event) => handleWordCardPointerDown(event, button.dataset.card));
   });
   if (state.boardAnimation === "deal" || state.boardAnimation === "draw") {
     scheduleBoardAnimationClear(state.boardAnimation);
@@ -549,9 +1017,11 @@ function renderBoard() {
 
 function renderCaptures() {
   captures.innerHTML = state.players
+    .map((player, playerIndex) => ({ player, playerIndex }))
+    .filter(({ player }) => player.active)
     .map(
-      (player, playerIndex) => `
-        <button class="capture-row ${player.active ? "" : "inactive"}" style="--player-color:${player.color}" data-player="${playerIndex}" type="button">
+      ({ player, playerIndex }) => `
+        <button class="capture-row" style="--player-color:${player.color}" data-player="${playerIndex}" type="button">
           <div class="capture-title">
             <span><span class="capture-dot"></span>${player.name} 已拿词</span>
             <strong>${player.captures.length}张 / ${formatSigned(player.roundScore)}</strong>
@@ -585,6 +1055,10 @@ function renderClaim() {
     claimPanel.classList.remove("active");
     claimPanel.classList.remove("judging");
     claimPanel.style.removeProperty("--active-color");
+    updateBoardRefreshCountdown();
+    if (!state.boardRefreshTimerId) {
+      claimText.textContent = getIdleClaimText();
+    }
     return;
   }
   const player = state.players[state.activePlayer];
@@ -592,15 +1066,495 @@ function renderClaim() {
   claimPanel.classList.add("active");
   claimPanel.classList.toggle("judging", Boolean(card));
   claimPanel.style.setProperty("--active-color", player.color);
-  claimText.textContent = card ? `${player.name}队选择了「${card.word}」，请判定` : `${player.name}队抢到，2 秒内点词卡`;
-  claimActions.classList.toggle("hidden", !card);
+  claimText.textContent = card ? `${player.name}队选择了「${card.word}」` : `${player.name}队抢到，2 秒内点词卡，系统自动判定`;
+  claimActions.classList.add("hidden");
   answerTimer.classList.toggle("hidden", Boolean(card));
 }
 
+function getIdleClaimText() {
+  return isSinglePlayerMode() ? "听到词后，直接点词卡" : "把词卡拖到自己的颜色区域";
+}
+
+function isSinglePlayerMode() {
+  return state.playerCount === 1;
+}
+
 function renderTimer() {
+  if (!Number.isFinite(state.timeLeft)) {
+    timer.textContent = "--:--";
+    return;
+  }
   const minutes = Math.floor(state.timeLeft / 60);
   const seconds = state.timeLeft % 60;
   timer.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function updateSongTimeLeft() {
+  if (!hasKnownAudioDuration()) {
+    state.timeLeft = null;
+    return;
+  }
+  state.timeLeft = Math.max(0, Math.ceil(audioPlayer.duration - audioPlayer.currentTime));
+}
+
+function hasKnownAudioDuration() {
+  return Number.isFinite(audioPlayer.duration) && audioPlayer.duration > 0;
+}
+
+async function searchNcmSongs() {
+  const keywords = ncmSearchInput.value.trim();
+  if (!keywords) {
+    setNcmStatus("先输入歌曲名、歌手或动画名", "error");
+    return;
+  }
+  state.ncmSearchLoading = true;
+  state.ncmSearchResults = [];
+  setNcmStatus("正在搜索网易云...", "");
+  renderNcmPanel();
+  try {
+    const data = await fetchNcmJson("/search", { keywords, limit: 12 });
+    const songs = data.result?.songs ?? [];
+    state.ncmSearchResults = songs.map(normalizeNcmSong);
+    setNcmStatus(songs.length ? `找到 ${songs.length} 首，点歌名即可加载播放和歌词` : "没有搜到结果", songs.length ? "ok" : "error");
+  } catch (error) {
+    setNcmStatus(`搜索失败：${error.message}`, "error");
+  } finally {
+    state.ncmSearchLoading = false;
+    renderNcmPanel();
+  }
+}
+
+async function loadNcmSong(songId) {
+  const song = state.ncmSearchResults.find((item) => item.id === songId);
+  if (!song) return;
+  setNcmStatus(`正在加载「${song.name}」...`, "");
+  state.ncmCurrentSong = song;
+  state.ncmLyrics = [];
+  state.ncmActiveLyricIndex = -1;
+  state.songWordBank = [];
+  renderNcmPanel();
+  try {
+    const [urlData, lyricData] = await Promise.all([
+      fetchNcmJson("/song/url/v1", { id: song.id, level: "standard" }),
+      fetchNcmJson("/lyric", { id: song.id }),
+    ]);
+    const playable = urlData.data?.find((item) => item.url);
+    if (!playable?.url) {
+      throw new Error(urlData.data?.[0]?.message || "没有可播放地址，可能需要登录 Cookie 或版权受限");
+    }
+    audioPlayer.src = playable.url;
+    state.ncmLyrics = mergeNcmLyrics(lyricData);
+    setNcmStatus(
+      state.ncmLyrics.length
+        ? "歌曲和歌词已加载，AI 分词后台处理中"
+        : "歌曲已加载，但没有歌词",
+      "ok",
+    );
+    audioBox.open = true;
+    audioPlayer.play().catch(() => {
+      setNcmStatus("歌曲已加载，点播放器开始播放", "ok");
+      renderNcmPanel();
+    });
+    if (state.ncmLyrics.length) {
+      updateSongWordBankInBackground(song.id, state.ncmLyrics);
+    }
+  } catch (error) {
+    setNcmStatus(`加载失败：${error.message}`, "error");
+  } finally {
+    renderNcmPanel();
+  }
+}
+
+function renderNcmPanel() {
+  const isCompact = Boolean(state.ncmCurrentSong && !audioPlayer.paused && state.ncmLyrics.length);
+  audioBox.classList.toggle("is-compact", isCompact);
+  if (isCompact) audioBox.open = true;
+  ncmSearchButton.disabled = state.ncmSearchLoading;
+  ncmLoginTitle.textContent = getNcmLoginTitle();
+  ncmLoginText.textContent = state.ncmLoginMessage;
+  ncmLoginButton.disabled = state.ncmLoginStatus === "checking" || state.ncmLoginStatus === "waiting" || state.ncmLoginStatus === "scanned";
+  ncmLoginButton.textContent = state.ncmLoginStatus === "logged-in" ? "重新登录" : "扫码登录";
+  ncmLoginQr.classList.toggle("hidden", !state.ncmQrImage);
+  ncmLoginQrImage.src = state.ncmQrImage || "";
+  ncmLoginQrText.textContent = getNcmQrText();
+  ncmStatus.textContent = state.ncmStatus;
+  ncmStatus.className = `ncm-status ${state.ncmStatusType}`.trim();
+  ncmResults.innerHTML = state.ncmSearchResults
+    .map(
+      (song) => `
+        <button class="ncm-result" type="button" data-song-id="${song.id}">
+          <span>
+            <strong>${escapeHtml(song.name)}</strong>
+            <small>${escapeHtml(song.artists)} · ${escapeHtml(song.album)}</small>
+          </span>
+          <b>${formatDuration(song.duration)}</b>
+        </button>
+      `,
+    )
+    .join("");
+  $$(".ncm-result").forEach((button) => {
+    button.addEventListener("click", () => loadNcmSong(Number(button.dataset.songId)));
+  });
+  ncmCurrent.classList.toggle("hidden", !state.ncmCurrentSong);
+  ncmCurrent.innerHTML = state.ncmCurrentSong
+    ? `<strong>${escapeHtml(state.ncmCurrentSong.name)}</strong><span>${escapeHtml(state.ncmCurrentSong.artists)}</span>`
+    : "";
+  ncmLyrics.classList.toggle("hidden", state.ncmLyrics.length === 0);
+  ncmLyrics.classList.toggle("is-playing", !audioPlayer.paused && state.ncmLyrics.length > 0);
+  ncmLyrics.innerHTML = state.ncmLyrics
+    .map(
+      (line, index) => `
+        <p class="${getLyricLineClass(index)}" data-lyric-index="${index}">
+          <span>${escapeHtml(line.text)}</span>
+          ${line.translation ? `<small>${escapeHtml(line.translation)}</small>` : ""}
+        </p>
+      `,
+    )
+    .join("");
+}
+
+async function checkNcmLoginStatus() {
+  state.ncmLoginStatus = "checking";
+  renderNcmPanel();
+  try {
+    const data = await fetchNcmJson("/login/status", { timestamp: Date.now() });
+    const profile = data.data?.profile || data.data?.account || null;
+    if (profile) {
+      state.ncmLoginStatus = "logged-in";
+      state.ncmLoginMessage = profile.nickname ? `已登录：${profile.nickname}` : "已登录网易云账号";
+    } else {
+      state.ncmLoginStatus = "logged-out";
+      state.ncmLoginMessage = "登录后可尝试播放账号有权限的完整歌曲。";
+    }
+  } catch {
+    state.ncmLoginStatus = "logged-out";
+    state.ncmLoginMessage = "无法确认登录状态，可重新扫码。";
+  } finally {
+    renderNcmPanel();
+  }
+}
+
+async function startNcmQrLogin() {
+  stopNcmQrPolling();
+  state.ncmLoginStatus = "checking";
+  state.ncmLoginMessage = "正在生成二维码...";
+  state.ncmQrImage = "";
+  renderNcmPanel();
+  try {
+    const keyData = await fetchNcmJson("/login/qr/key", { timestamp: Date.now() });
+    state.ncmQrKey = keyData.data?.unikey || "";
+    if (!state.ncmQrKey) {
+      throw new Error("未获取到二维码 key");
+    }
+    const qrData = await fetchNcmJson("/login/qr/create", { key: state.ncmQrKey, qrimg: "true", timestamp: Date.now() });
+    state.ncmQrImage = qrData.data?.qrimg || "";
+    state.ncmLoginStatus = "waiting";
+    state.ncmLoginMessage = "请用网易云音乐 App 扫码登录。";
+    renderNcmPanel();
+    state.ncmQrPollingId = window.setInterval(checkNcmQrLogin, 1800);
+    checkNcmQrLogin();
+  } catch (error) {
+    state.ncmLoginStatus = "logged-out";
+    state.ncmLoginMessage = `登录二维码生成失败：${error.message}`;
+    renderNcmPanel();
+  }
+}
+
+async function checkNcmQrLogin() {
+  if (!state.ncmQrKey) return;
+  try {
+    const data = await fetchNcmJson(
+      "/login/qr/check",
+      { key: state.ncmQrKey, timestamp: Date.now() },
+      { allowCodes: [800, 801, 802, 803] },
+    );
+    if (data.code === 801) {
+      state.ncmLoginStatus = "waiting";
+      state.ncmLoginMessage = "等待扫码确认。";
+    } else if (data.code === 802) {
+      state.ncmLoginStatus = "scanned";
+      state.ncmLoginMessage = "已扫码，请在手机上确认登录。";
+    } else if (data.code === 803) {
+      stopNcmQrPolling();
+      state.ncmQrImage = "";
+      state.ncmLoginStatus = "logged-in";
+      state.ncmLoginMessage = "登录成功，后续播放请求会使用当前账号。";
+      await checkNcmLoginStatus();
+      return;
+    } else if (data.code === 800) {
+      stopNcmQrPolling();
+      state.ncmQrImage = "";
+      state.ncmLoginStatus = "logged-out";
+      state.ncmLoginMessage = "二维码已过期，请重新扫码。";
+    } else {
+      state.ncmLoginMessage = data.message || "等待扫码确认。";
+    }
+  } catch (error) {
+    stopNcmQrPolling();
+    state.ncmLoginStatus = "logged-out";
+    state.ncmLoginMessage = `登录检查失败：${error.message}`;
+  } finally {
+    renderNcmPanel();
+  }
+}
+
+function stopNcmQrPolling() {
+  window.clearInterval(state.ncmQrPollingId);
+  state.ncmQrPollingId = null;
+}
+
+function getNcmLoginTitle() {
+  if (state.ncmLoginStatus === "checking") return "正在检查登录";
+  if (state.ncmLoginStatus === "logged-in") return "网易云已登录";
+  if (state.ncmLoginStatus === "waiting") return "等待扫码";
+  if (state.ncmLoginStatus === "scanned") return "等待手机确认";
+  return "网易云未登录";
+}
+
+function getNcmQrText() {
+  if (state.ncmLoginStatus === "scanned") return "已扫码，请在手机上确认";
+  if (state.ncmLoginStatus === "waiting") return "请用网易云音乐 App 扫码";
+  return state.ncmLoginMessage;
+}
+
+function renderActiveLyricLine() {
+  if (!state.ncmLyrics.length) return;
+  const nextIndex = getCurrentLyricIndex();
+  if (nextIndex === -1 || nextIndex === state.ncmActiveLyricIndex) return;
+  state.ncmActiveLyricIndex = nextIndex;
+  $$(".ncm-lyrics p").forEach((line, index) => {
+    line.className = getLyricLineClass(index);
+    if (index === nextIndex) {
+      line.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+  });
+}
+
+function getLyricLineClass(index) {
+  if (index === state.ncmActiveLyricIndex) return "active";
+  if (index === state.ncmActiveLyricIndex - 1) return "previous";
+  if (index === state.ncmActiveLyricIndex + 1) return "next";
+  return "";
+}
+
+function getCurrentLyricIndex() {
+  if (!state.ncmLyrics.length) return -1;
+  const currentTime = audioPlayer.currentTime * 1000;
+  return state.ncmLyrics.findIndex((line, index) => {
+    const nextLine = state.ncmLyrics[index + 1];
+    return currentTime >= line.time && (!nextLine || currentTime < nextLine.time);
+  });
+}
+
+function isCardInClaimLyricWindow(card) {
+  if (state.claimLyricIndex < 0) return false;
+  const lines = [state.ncmLyrics[state.claimLyricIndex], state.ncmLyrics[state.claimLyricIndex - 1]].filter(Boolean);
+  return lines.some((line) => line.text.includes(card.word));
+}
+
+function resetNcmPlaybackState(message) {
+  state.ncmCurrentSong = null;
+  state.ncmLyrics = [];
+  state.ncmActiveLyricIndex = -1;
+  state.songWordBank = [];
+  setNcmStatus(message, "ok");
+  renderNcmPanel();
+}
+
+async function fetchNcmJson(path, params, options = {}) {
+  const response = await fetch(`${getNcmApiBase()}${path}?${new URLSearchParams(params)}`, {
+    credentials: "same-origin",
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  const data = await response.json();
+  if (data.code && Number(data.code) >= 400 && !options.allowCodes?.includes(Number(data.code))) {
+    throw new Error(data.message || `API ${data.code}`);
+  }
+  return data;
+}
+
+function getNcmApiBase() {
+  const stored = localStorage.getItem(NCM_API_BASE_STORAGE_KEY);
+  if (stored) return stored.replace(/\/$/, "");
+  if (window.CARU_NCM_API_BASE) return String(window.CARU_NCM_API_BASE).replace(/\/$/, "");
+  if (location.protocol === "http:" || location.protocol === "https:") {
+    return `${location.origin}/ncm`;
+  }
+  return `http://127.0.0.1:${DEFAULT_NCM_API_PORT}`;
+}
+
+function normalizeNcmSong(song) {
+  return {
+    id: song.id,
+    name: song.name || "未命名歌曲",
+    artists: (song.artists || song.ar || []).map((artist) => artist.name).filter(Boolean).join(" / ") || "未知歌手",
+    album: song.album?.name || song.al?.name || "未知专辑",
+    duration: song.duration || song.dt || 0,
+  };
+}
+
+function mergeNcmLyrics(data) {
+  const original = parseLrc(data.lrc?.lyric || "");
+  const translated = new Map(parseLrc(data.tlyric?.lyric || "").map((line) => [Math.round(line.time), line.text]));
+  const romanized = new Map(parseLrc(data.romalrc?.lyric || "").map((line) => [Math.round(line.time), line.text]));
+  return original
+    .filter((line) => line.text)
+    .map((line) => ({
+      ...line,
+      translation: translated.get(Math.round(line.time)) || romanized.get(Math.round(line.time)) || "",
+    }));
+}
+
+async function buildSongWordBank(lyrics) {
+  if (!lyrics.length) return { source: "none", words: [], message: "没有歌词，使用原本词库" };
+  const cacheKey = getAiWordCacheKey(lyrics);
+  const cachedWords = getCachedAiWords(cacheKey);
+  if (hasAiGeneratedWords(cachedWords)) {
+    return { source: "AI", words: normalizeDynamicWordBank(cachedWords), cached: true };
+  }
+  try {
+    const response = await fetch("/api/extract-words", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ lyrics }),
+    });
+    if (response.ok) {
+      const data = await response.json();
+      if (data.enabled && Array.isArray(data.words) && data.words.length) {
+        if (data.source !== "fallback" && hasAiGeneratedWords(data.words)) {
+          setCachedAiWords(cacheKey, data.words);
+          return { source: "AI", words: normalizeDynamicWordBank(data.words) };
+        }
+        return {
+          source: "fallback",
+          words: normalizeDynamicWordBank(data.words),
+          message: data.error ? `AI 分词失败，临时使用本地分词：${data.error}` : "AI 未生成词卡，临时使用本地分词",
+        };
+      }
+      if (!data.enabled) {
+        return { source: "none", words: [], message: "AI 未启用，使用原本词库" };
+      }
+      return { source: "none", words: [], message: data.error ? `AI 分词失败，使用原本词库：${data.error}` : "AI 未生成词卡，使用原本词库" };
+    }
+    return { source: "none", words: [], message: `AI 分词接口 HTTP ${response.status}，使用原本词库` };
+  } catch {
+    return { source: "none", words: [], message: "AI 分词请求失败，使用原本词库" };
+  }
+}
+
+async function updateSongWordBankInBackground(songId, lyrics) {
+  const result = await buildSongWordBank(lyrics);
+  if (state.ncmCurrentSong?.id !== songId) return;
+  state.songWordBank = result.words;
+  setNcmStatus(getSongWordStatus(result), result.words.length ? "ok" : "");
+  if (!gamePanel.classList.contains("hidden") && state.songWordBank.length) {
+    const message = result.cached ? `已从缓存加入 ${result.words.length} 个歌词词` : `AI 分词完成，已加入 ${result.words.length} 个歌词词`;
+    shuffleBoard(message);
+    showTemporaryClaimNotice(message);
+  }
+  renderNcmPanel();
+}
+
+function getAiWordCacheKey(lyrics) {
+  const text = lyrics
+    .map((line) => String(line.text || "").replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .join("\n");
+  return `v1:${simpleHash(text)}`;
+}
+
+function simpleHash(value) {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16);
+}
+
+function getCachedAiWords(cacheKey) {
+  try {
+    const cache = JSON.parse(localStorage.getItem(AI_WORD_CACHE_STORAGE_KEY) || "{}");
+    const words = Array.isArray(cache[cacheKey]) ? cache[cacheKey] : null;
+    if (!words || hasAiGeneratedWords(words)) return words;
+    delete cache[cacheKey];
+    localStorage.setItem(AI_WORD_CACHE_STORAGE_KEY, JSON.stringify(cache));
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedAiWords(cacheKey, words) {
+  if (!hasAiGeneratedWords(words)) return;
+  try {
+    const cache = JSON.parse(localStorage.getItem(AI_WORD_CACHE_STORAGE_KEY) || "{}");
+    delete cache[cacheKey];
+    cache[cacheKey] = words;
+    const keys = Object.keys(cache);
+    keys.slice(0, Math.max(0, keys.length - AI_WORD_CACHE_LIMIT)).forEach((key) => delete cache[key]);
+    localStorage.setItem(AI_WORD_CACHE_STORAGE_KEY, JSON.stringify(cache));
+  } catch {
+    localStorage.removeItem(AI_WORD_CACHE_STORAGE_KEY);
+  }
+}
+
+function hasAiGeneratedWords(words) {
+  return Array.isArray(words) && words.some((word) => word?.ai === true);
+}
+
+function normalizeDynamicWordBank(cards) {
+  const builtInWords = new Set(wordBank.map((card) => card.word));
+  const seen = new Set();
+  return cards
+    .map((card) => ({
+      word: String(card.word || "").trim(),
+      kana: String(card.kana || "歌词").trim() || "歌词",
+      value: Math.min(3, Math.max(1, Number(card.value) || 1)),
+      dynamic: true,
+      ai: Boolean(card.ai),
+    }))
+    .filter((card) => card.word && !builtInWords.has(card.word))
+    .filter((card) => {
+      if (seen.has(card.word)) return false;
+      seen.add(card.word);
+      return true;
+    })
+    .slice(0, MAX_DYNAMIC_WORDS);
+}
+
+function getSongWordStatus(result) {
+  if (result.words.length) {
+    if (result.source === "fallback") {
+      return `歌曲和歌词已加载，${result.message || `临时使用本地分词加入 ${result.words.length} 个歌词词`}`;
+    }
+    const source = result.cached ? "缓存" : "AI";
+    return `歌曲和歌词已加载，已用${source}加入 ${result.words.length} 个歌词词`;
+  }
+  return `歌曲和歌词已加载，${result.message || "使用原本词库"}`;
+}
+
+function parseLrc(source) {
+  return source
+    .split(/\r?\n/)
+    .map((line) => {
+      const match = line.match(/^\[(\d{2}):(\d{2})(?:\.(\d{1,3}))?\](.*)$/);
+      if (!match) return null;
+      const [, minutes, seconds, fraction = "0", text = ""] = match;
+      const milliseconds = Number(fraction.padEnd(3, "0").slice(0, 3));
+      return {
+        time: (Number(minutes) * 60 + Number(seconds)) * 1000 + milliseconds,
+        text: text.trim(),
+      };
+    })
+    .filter(Boolean);
+}
+
+function setNcmStatus(message, type = "") {
+  state.ncmStatus = message;
+  state.ncmStatusType = type;
 }
 
 function startAnswerTimer() {
@@ -654,6 +1608,8 @@ function shuffle(items) {
 }
 
 function shuffleBoard(message = "正在洗牌") {
+  resetBoardRefreshDeadline();
+  playSound("shuffle");
   state.boardAnimation = "shuffle";
   state.boardAnimationClearFor = null;
   state.drawnCardId = null;
@@ -769,11 +1725,13 @@ function resetGame() {
   closeCaptureModal();
   gamePanel.classList.add("hidden");
   setupPanel.classList.remove("hidden");
+  delete gamePanel.dataset.playerCount;
+  cleanupCardDrag();
   clearClaim();
   state.players = [];
   state.cards = [];
   state.round = 1;
-  state.timeLeft = state.roundLength;
+  state.timeLeft = null;
   state.history = [];
 }
 
@@ -846,6 +1804,55 @@ function removeAfter(element, delay) {
   window.setTimeout(() => element.remove(), delay);
 }
 
+function unlockSound() {
+  if (!SOUND_ENABLED || state.audioContext) return;
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+  try {
+    state.audioContext = new AudioContextClass();
+    state.audioContext.resume?.();
+  } catch {
+    state.audioContext = null;
+  }
+}
+
+function playSound(type) {
+  if (!SOUND_ENABLED) return;
+  unlockSound();
+  const context = state.audioContext;
+  if (!context) return;
+  if (context.state === "suspended") context.resume?.();
+  const now = context.currentTime;
+  if (type === "correct") {
+    playTone(context, 659, now, 0.08, 0.12, "sine");
+    playTone(context, 988, now + 0.07, 0.11, 0.1, "triangle");
+  } else if (type === "combo") {
+    [523, 659, 784, 1046].forEach((frequency, index) => {
+      playTone(context, frequency, now + index * 0.045, 0.1, 0.09, "triangle");
+    });
+  } else if (type === "wrong") {
+    playTone(context, 196, now, 0.12, 0.16, "sawtooth");
+    playTone(context, 147, now + 0.08, 0.1, 0.14, "sawtooth");
+  } else if (type === "shuffle") {
+    [330, 392, 494].forEach((frequency, index) => {
+      playTone(context, frequency, now + index * 0.035, 0.045, 0.045, "square");
+    });
+  }
+}
+
+function playTone(context, frequency, startTime, duration, volume, type = "sine") {
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, startTime);
+  gain.gain.setValueAtTime(0.0001, startTime);
+  gain.gain.exponentialRampToValueAtTime(volume, startTime + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  oscillator.connect(gain).connect(context.destination);
+  oscillator.start(startTime);
+  oscillator.stop(startTime + duration + 0.02);
+}
+
 function makeCard(card, index) {
   return {
     ...card,
@@ -873,33 +1880,39 @@ function getBoardRows() {
 }
 
 function getCardFontSize() {
-  if (state.cardCount >= 32) return "clamp(18px, 2.45vw, 34px)";
-  if (state.cardCount >= 24) return "clamp(20px, 2.8vw, 38px)";
+  if (state.cardCount >= 32) return "clamp(13px, 1.55vw, 22px)";
+  if (state.cardCount >= 24) return "clamp(16px, 2.1vw, 28px)";
   return "clamp(24px, 3.2vw, 44px)";
 }
 
 function getKanaFontSize() {
-  if (state.cardCount >= 32) return "10px";
+  if (state.cardCount >= 32) return "8px";
   if (state.cardCount >= 24) return "11px";
   return "13px";
 }
 
 function getCardPadding() {
-  if (state.cardCount >= 32) return "6px";
+  if (state.cardCount >= 32) return "4px";
   if (state.cardCount >= 24) return "8px";
   return "10px";
 }
 
 function getCardBadgeSize() {
-  if (state.cardCount >= 32) return "24px";
+  if (state.cardCount >= 32) return "18px";
   if (state.cardCount >= 24) return "26px";
   return "30px";
 }
 
 function getCardBadgeOffset() {
-  if (state.cardCount >= 32) return "5px";
+  if (state.cardCount >= 32) return "3px";
   if (state.cardCount >= 24) return "6px";
   return "8px";
+}
+
+function getBoardGap() {
+  if (state.cardCount >= 32) return "6px";
+  if (state.cardCount >= 24) return "8px";
+  return "10px";
 }
 
 function loadStoredWordBank() {
@@ -955,7 +1968,8 @@ function renderWordThemeOptions() {
 
 function getPlayableWordBank() {
   const themedBank = getThemeWordBank(state.wordTheme, wordBank);
-  return themedBank.length >= Math.min(12, state.cardCount) ? themedBank : wordBank;
+  const baseBank = themedBank.length >= Math.min(12, state.cardCount) ? themedBank : wordBank;
+  return mergeWordBanks(baseBank, state.songWordBank);
 }
 
 function getThemeWordBank(themeId, sourceBank) {
@@ -963,6 +1977,16 @@ function getThemeWordBank(themeId, sourceBank) {
   if (!theme || theme.id === "all") return sourceBank;
   const themeWords = new Set(theme.words);
   return sourceBank.filter((card) => themeWords.has(card.word));
+}
+
+function mergeWordBanks(baseBank, extraBank) {
+  if (!extraBank.length) return baseBank;
+  const seen = new Set();
+  return [...extraBank, ...baseBank].filter((card) => {
+    if (seen.has(card.word)) return false;
+    seen.add(card.word);
+    return true;
+  });
 }
 
 function parseWordBankText(text) {
@@ -1024,6 +2048,23 @@ function activeColor() {
 
 function formatSigned(value) {
   return value > 0 ? `+${value}` : String(value);
+}
+
+function formatDuration(milliseconds) {
+  if (!milliseconds) return "--:--";
+  const totalSeconds = Math.round(milliseconds / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function registerServiceWorker() {

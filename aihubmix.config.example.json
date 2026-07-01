@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "apiKey": "请在这里填写你的 AIHubMix API Key",
+  "baseUrl": "https://aihubmix.com/v1",
+  "model": "deepseek-v4-flash",
+  "maxWords": 80,
+  "timeoutMs": 60000
+}
